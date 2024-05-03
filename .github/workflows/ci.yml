@@ -27,4 +27,5 @@ jobs:
 
       # Runs a single command using the runners shell
       - name: build
-        run: build.ps1
+        shell: pwsh
+        run: ./build.ps1
