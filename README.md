@@ -1,6 +1,6 @@
 # PSModuleUtils
 
-A module with helper functions to build and publish PowerShell modules to the PSGallery
+A module with helper functions to build and publish PowerShell modules to the PSGallery.
 
 ## Setup
 
