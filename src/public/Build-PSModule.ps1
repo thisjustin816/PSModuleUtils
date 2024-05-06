@@ -86,5 +86,4 @@
 
     Get-Module -Name $Name -All | Remove-Module -Force -ErrorAction SilentlyContinue
     Import-Module -Name $manifestPath -Force -PassThru
-
 }

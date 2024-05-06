@@ -17,6 +17,8 @@
                 -Path $versionedFolder.FullName `
                 -NuGetApiKey $ApiKey `
                 -Repository $Repository
+
+            Find-Module -Name $Name -RequiredVersion $versionedFolder.BaseName -Repository $Repository
         }
     }
     else {
