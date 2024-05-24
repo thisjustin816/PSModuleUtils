@@ -7,19 +7,21 @@
         [String]$ApiKey = $env:PSGALLERYAPIKEY
     )
 
-    Get-Module -Name $Name -All | Remove-Module -Force -ErrorAction SilentlyContinue
+    Get-Module -Name $Name -All | Remove-Module -Force -Confirm:$false -ErrorAction SilentlyContinue
 
     $versionedFolder = Get-ChildItem -Path "$OutputDirectory/$Name" | Select-Object -Last 1
     if ($versionedFolder) {
         Import-Module -Name "$($versionedFolder.FullName)/$Name.psd1" -Force -PassThru
-        if ($PSCmdlet.ShouldProcess("$Name v$($versionedFolder.BaseName)", "Publish-Module")) {
-            Publish-Module `
-                -Path $versionedFolder.FullName `
-                -NuGetApiKey $ApiKey `
-                -Repository $Repository
+        Publish-PSResource `
+            -Path $versionedFolder.FullName `
+            -ApiKey $ApiKey `
+            -Repository $Repository
 
-            Find-Module -Name $Name -RequiredVersion $versionedFolder.BaseName -Repository $Repository
-        }
+        Find-PSResource `
+            -Name $Name `
+            -Version $versionedFolder.BaseName `
+            -Prerelease `
+            -Repository $Repository
     }
     else {
         Write-Warning -Message "No module named $Name found to publish."
