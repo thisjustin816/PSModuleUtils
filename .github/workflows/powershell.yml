@@ -36,6 +36,8 @@ jobs:
         with:
           path: .\
           recurse: true
+          includeRule: '*'
+          #includeDefaultRules: true
           #enableExit: true
           output: results.sarif
 
