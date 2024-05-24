@@ -67,7 +67,6 @@ function Build-PSModule {
         Copyright = "(c) $( Get-Date -Format yyyy ) $companyName. All rights reserved."
         RootModule = "$Name.psm1"
         ModuleVersion = $moduleVersion
-        Prerelease = $modulePrerelease
         Guid = $guid
         Description = $Description
         PowerShellVersion = 5.1
@@ -80,6 +79,9 @@ function Build-PSModule {
     }
     if ($requiredModules) {
         $newModuleManifest['RequiredModules'] = $requiredModules
+    }
+    if ($modulePrerelease) {
+        $newModuleManifest['Prerelease'] = $modulePrerelease
     }
     New-ModuleManifest @newModuleManifest
     Get-Item -Path $manifestPath
