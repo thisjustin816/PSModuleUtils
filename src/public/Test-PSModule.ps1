@@ -33,5 +33,6 @@
     $config.Run.Exit = $true
     $config.Run.Throw = $true
 
+    $config
     Invoke-Pester -Configuration $config
 }
