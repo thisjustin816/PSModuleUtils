@@ -59,13 +59,15 @@ function Build-PSModule {
     $requiredModulesStatement = Get-Content -Path "$SourceDirectory\$Name.psm1" |
         Where-Object -FilterScript { $_ -match '#Requires' }
     $requiredModules = (($requiredModulesStatement -split '-Modules ')[1] -split ',').Trim()
+    $moduleVersion, $modulePrerelease = $Version -split '-', 2
     $newModuleManifest = @{
         Path = $manifestPath
         Author = ( & git log --format='%aN' | Sort-Object -Unique )
         CompanyName = $companyName
         Copyright = "(c) $( Get-Date -Format yyyy ) $companyName. All rights reserved."
         RootModule = "$Name.psm1"
-        ModuleVersion = $Version
+        ModuleVersion = $moduleVersion
+        Prerelease = $modulePrerelease
         Guid = $guid
         Description = $Description
         PowerShellVersion = 5.1
