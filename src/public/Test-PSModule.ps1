@@ -1,4 +1,4 @@
-function Test-PSModule {
+﻿function Test-PSModule {
     [CmdletBinding()]
     param (
         [String]$Name = 'PSModule',
@@ -6,28 +6,30 @@ function Test-PSModule {
         [String[]]$Tag
     )
 
+    Install-Module -Name Pester -Force -AllowClobber -SkipPublisherCheck
+
     Get-Module -Name $Name -All | Remove-Module -Force -ErrorAction SilentlyContinue
     $config = New-PesterConfiguration @{
-        Run          = @{
-            Path  = $SourceDirectory
-        }
-        CodeCoverage = @{
-            Enabled    = $true
-            OutputPath = 'tests/coverage.xml'
-        }
-        TestResult   = @{
-            Enabled    = $true
-            OutputPath = 'tests/testResults.xml'
-        }
-        Output       = @{
-            Verbosity = 'Detailed'
-        }
-    }
+        Run          = @{
+            Path = $SourceDirectory
+        }
+        CodeCoverage = @{
+            Enabled    = $true
+            OutputPath = 'tests/coverage.xml'
+        }
+        TestResult   = @{
+            Enabled    = $true
+            OutputPath = 'tests/testResults.xml'
+        }
+        Output       = @{
+            Verbosity = 'Detailed'
+        }
+    }
     if ($Tag) {
         $config.Filter.Tag = 'Unit'
     }
 
-    # TODO: Remove after implementing test result publishing 
+    # TODO: Remove after implementing test result publishing
     $config.Run.Exit = $true
     $config.Run.Throw = $true
 

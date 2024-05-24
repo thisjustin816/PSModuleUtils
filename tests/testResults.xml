@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<test-results xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="nunit_schema_2.5.xsd" name="Pester" total="2" errors="0" failures="0" not-run="0" inconclusive="0" ignored="0" skipped="0" invalid="0" date="2024-05-24" time="08:05:05">
+  <environment clr-version="4.0.30319.42000" user-domain="DESKTOP-H3SH7O9" cwd="C:\Users\jbees\repos\PSModuleUtils" platform="Microsoft Windows 11 Pro|C:\WINDOWS|\Device\Harddisk0\Partition3" machine-name="DESKTOP-H3SH7O9" nunit-version="2.5.8.0" os-version="10.0.22631" user="jbees" />
+  <culture-info current-culture="en-US" current-uiculture="en-US" />
+  <test-suite type="TestFixture" name="Pester" executed="True" result="Success" success="True" time="4.0541" asserts="0" description="Pester">
+    <results>
+      <test-suite type="TestFixture" name="C:\Users\jbees\repos\PSModuleUtils\src\PSModuleUtils.Module.Tests.ps1" executed="True" result="Success" success="True" time="4.0541" asserts="0" description="C:\Users\jbees\repos\PSModuleUtils\src\PSModuleUtils.Module.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="Module Validation" executed="True" result="Success" success="True" time="1.7612" asserts="0" description="Module Validation">
+            <results>
+              <test-suite type="TestFixture" name="Module Validation.module" executed="True" result="Success" success="True" time="1.641" asserts="0" description="Module Validation.module">
+                <results>
+                  <test-case description="should not contain functions" name="Module Validation.module.should not contain functions" time="0.8093" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="should not export any package management functions" name="Module Validation.module.should not export any package management functions" time="0.4755" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+    </results>
+  </test-suite>
+</test-results>
