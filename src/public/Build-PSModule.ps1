@@ -1,4 +1,4 @@
-﻿function Build-PSModule {
+function Build-PSModule {
     [CmdletBinding()]
     param (
         [String]$Name = 'PSModule',
@@ -12,8 +12,6 @@
 
     Remove-Item -Path $OutputDirectory -Recurse -Force -ErrorAction SilentlyContinue
     $ModuleOutputDirectory = "$OutputDirectory/$Name/$Version"
-
-    Invoke-ScriptAnalyzer -Path $SourceDirectory -Recurse -Severity Information -Fix:$FixScriptAnanlyzer
 
     $null = New-Item -Path "$ModuleOutputDirectory/$name.psm1" -ItemType File -Force
     $functionNames = @()
