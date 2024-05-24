@@ -30,12 +30,21 @@ jobs:
           files: tests/testResults.xml
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install ReportGenerator
-        run: dotnet tool install --global dotnet-reportgenerator-globaltool
-      
-      - name: Convert Pester Coverage Report
-        run: reportgenerator "-reports:tests/coverage.xml" "-targetdir:tests/coverage" "-reporttypes:Cobertura"
-      
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8.x
+          dotnet-quality: 'ga'
+
+      - name: ReportGenerator
+        # https://reportgenerator.io/usage
+        uses: danielpalme/ReportGenerator-GitHub-Action@5.3.0
+        with:
+          reports: tests/coverage.xml
+          targetdir: tests/coverage
+          reporttypes: Cobertura
+          sourcedirs: src
+
       - name: Publish Code Coverage
         uses: 5monkeys/cobertura-action@v14
         with:
