@@ -1,6 +1,6 @@
 $BuildPSModule = @{
     Name        = 'PSModuleUtils'
-    Version     = '0.0.5-preview2'
+    Version     = '0.0.5'
     Description = 'A module with helper functions to build and publish PowerShell modules to the PSGallery.'
     Tags        = ('PSEdition_Desktop', 'PSEdition_Core', 'Windows')
 }
