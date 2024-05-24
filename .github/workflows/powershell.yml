@@ -36,9 +36,6 @@ jobs:
         with:
           path: .\
           recurse: true
-          includeRule: '*'
-          #includeDefaultRules: true
-          #enableExit: true
           output: results.sarif
 
       - name: Upload SARIF results file
