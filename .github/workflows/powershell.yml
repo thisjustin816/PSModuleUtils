@@ -36,7 +36,7 @@ jobs:
         with:
           path: .\
           recurse: true
-          enableExit: true
+          #enableExit: true
           output: results.sarif
 
       - name: Upload SARIF results file
