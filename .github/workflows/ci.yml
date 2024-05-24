@@ -47,6 +47,7 @@ jobs:
 
       - name: Publish Code Coverage
         uses: 5monkeys/cobertura-action@v14
+        if: github.event_name == 'pull_request'
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           path: tests/coverage/Cobertura.xml
