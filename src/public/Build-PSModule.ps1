@@ -42,8 +42,11 @@ function Build-PSModule {
                 $functionContent.IndexOf($functionContent -match "function $functionName")[0]
             ) | Where-Object -FilterScript { $_ -ge 0 } | Sort-Object | Select-Object -First 1
             $functionContent = $functionContent[$startIndex..($functionContent.Length - 1)]
+            
             # Format the private function dot sources for the expected folder structure
+            Write-Host "Before replace: $functionContent"
             $functionContent = $functionContent.Replace('../../private', 'private')
+            Write-Host "After replace: $functionContent"
 
             Write-Host -Object "Building function $functionName..."
             Write-Host -Object (
