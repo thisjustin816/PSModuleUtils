@@ -12,6 +12,7 @@ jobs:
   build:
     permissions:
       checks: write # Needed for publishing test results
+      contents: write # Needed for tagging with the released version
       pull-requests: write # Needed for publishing test results
 
     runs-on: windows-latest
@@ -20,8 +21,22 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: build
+        id: build
         shell: pwsh
-        run: ./build.ps1
+        run: |
+          $build = ./build.ps1
+          $build
+
+          $moduleName = $build[1].Name
+          echo "::set-output name=moduleName::$moduleName"
+
+          $moduleVersion = $build[1].ModuleBase | Split-Path -Leaf
+          echo "::set-output name=moduleVersion::$moduleVersion"
+
+      - name: Output Tag Info
+        shell: pwsh
+        run: |
+          Write-Host "${{ steps.build.outputs.moduleName }} current commit will be tagged with ${{ steps.build.outputs.moduleVersion }} on a successful publish."
 
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action/windows@v2
@@ -31,7 +46,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup .NET Core
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.x
           dotnet-quality: 'ga'
@@ -56,8 +71,24 @@ jobs:
           only_changed_files: true
 
       - name: publish
-        if: github.ref == 'refs/heads/main'
+        if: success() && github.ref == 'refs/heads/main'
         shell: pwsh
-        run: ./publish.ps1
+        run: |
+          ./publish.ps1
         env:
           PSGALLERYAPIKEY: ${{ secrets.PSGALLERYAPIKEY }}
+
+      - name: Tag commit
+        if: success() && github.ref == 'refs/heads/main'
+        uses: actions/github-script@v5
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo
+            const tag = `${{ steps.build.outputs.moduleVersion }}`
+            await github.rest.git.createRef({
+              owner,
+              repo,
+              ref: `refs/tags/${tag}`,
+              sha: context.sha
+            })
