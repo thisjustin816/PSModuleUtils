@@ -10,6 +10,19 @@ function Build-PSModule {
         [Switch]$FixScriptAnalyzer
     )
 
+    Write-Host -Object 'Building with the following parameters:'
+    Write-Host -Object (
+        [PSCustomObject]@{
+            Name              = $Name
+            Version           = $Version
+            Description       = $Description
+            Tags              = $Tags
+            SourceDirectory   = $SourceDirectory
+            OutputDirectory   = $OutputDirectory
+            FixScriptAnalyzer = $FixScriptAnalyzer
+        } | Format-List | Out-String
+    )
+
     Remove-Item -Path $OutputDirectory -Recurse -Force -ErrorAction SilentlyContinue
     $ModuleOutputDirectory = "$OutputDirectory/$Name/$Version"
 
@@ -21,6 +34,7 @@ function Build-PSModule {
             $functionName = $_.BaseName
             $functionNames += $functionName
             $functionContent = Get-Content -Path $_.FullName
+            $originalFunctionContent = $functionContent
 
             # Remove any init blocks outside of the function
             $startIndex = (
@@ -31,9 +45,12 @@ function Build-PSModule {
             # Format the private function dot sources for the expected folder structure
             $functionContent = $functionContent.Replace('../../private', 'private')
 
+            Write-Host -Object "Building function $functionName..."
+            Compare-Object -ReferenceObject $originalFunctionContent -DifferenceObject $functionContent
             $moduleContent += ''
             $moduleContent += $functionContent
         }
+
     $moduleContent | Set-Content -Path "$ModuleOutputDirectory/$name.psm1" -Force
     $null = New-Item -Path "$ModuleOutputDirectory/private" -ItemType Directory -Force
     Get-ChildItem -Path "$SourceDirectory/private" -Exclude '*.Tests.ps1' |
