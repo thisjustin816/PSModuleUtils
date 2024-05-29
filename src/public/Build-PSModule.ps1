@@ -46,7 +46,11 @@ function Build-PSModule {
             $functionContent = $functionContent.Replace('../../private', 'private')
 
             Write-Host -Object "Building function $functionName..."
-            Compare-Object -ReferenceObject $originalFunctionContent -DifferenceObject $functionContent
+            Write-Host -Object (
+                Compare-Object -ReferenceObject $functionContent -DifferenceObject $originalFunctionContent |
+                    Format-Table |
+                    Out-String
+            )
             $moduleContent += ''
             $moduleContent += $functionContent
         }
