@@ -32,6 +32,8 @@ function Build-PSModule {
     Get-ChildItem -Path "$SourceDirectory/public" -Filter '*.ps1' -Exclude '*.Tests.ps1' -File -Recurse |
         ForEach-Object -Process {
             $functionName = $_.BaseName
+            Write-Host -Object "Building function $functionName..."
+
             $functionNames += $functionName
             $functionContent = Get-Content -Path $_.FullName
             $originalFunctionContent = $functionContent
@@ -44,11 +46,11 @@ function Build-PSModule {
             $functionContent = $functionContent[$startIndex..($functionContent.Length - 1)]
             
             # Format the private function dot sources for the expected folder structure
-            Write-Host "Before replace: $functionContent"
+            if ($functionContent -match 'private') {
+                Write-Host ($functionContent -join "`n")
+            }
             $functionContent = $functionContent.Replace('../../private', 'private')
-            Write-Host "After replace: $functionContent"
 
-            Write-Host -Object "Building function $functionName..."
             Write-Host -Object (
                 Compare-Object -ReferenceObject $functionContent -DifferenceObject $originalFunctionContent |
                     Format-Table |
