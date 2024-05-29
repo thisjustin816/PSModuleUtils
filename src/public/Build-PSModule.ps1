@@ -46,10 +46,7 @@ function Build-PSModule {
             $functionContent = $functionContent[$startIndex..($functionContent.Length - 1)]
             
             # Format the private function dot sources for the expected folder structure
-            if ($functionContent -match 'private') {
-                Write-Host ($functionContent -join "`n")
-            }
-            $functionContent = $functionContent.Replace('../../private', 'private')
+            $functionContent = $functionContent -replace '(?<=\. \$PSScriptRoot/)\.\./\.\./private', 'private'
 
             Write-Host -Object (
                 Compare-Object -ReferenceObject $functionContent -DifferenceObject $originalFunctionContent |
