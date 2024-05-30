@@ -14,6 +14,9 @@
         PSAvoidUsingCmdletAliases        = @{
             allowlist = @()
         }
+        PSAvoidUsingWriteHost            = @{
+            Enable = $false
+        }
         PSPlaceCloseBrace                = @{
             Enable             = $true
             NoEmptyLineBefore  = $true
