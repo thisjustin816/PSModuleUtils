@@ -1,4 +1,29 @@
-﻿function Publish-PSModule {
+﻿<#
+.SYNOPSIS
+Publishes a PowerShell module to a repository.
+
+.DESCRIPTION
+Publishes a PowerShell module to a repository. Defaults to PSGallery.
+
+.PARAMETER Name
+The name of the module.
+
+.PARAMETER OutputDirectory
+The build output directory used in Build-PSModule.
+
+.PARAMETER Repository
+The repository to publish to. Defaults to PSGallery.
+
+.PARAMETER ApiKey
+The API key to use for publishing. Defaults to $env:PSGALLERYAPIKEY.
+
+.EXAMPLE
+Publish-PSModule -Name 'MyModule' -OutputDirectory "$PWD/out" -Repository 'PSGallery'
+
+.NOTES
+N/A
+#>
+function Publish-PSModule {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
         [String]$Name = 'PSModule',
