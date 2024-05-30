@@ -1,4 +1,27 @@
-﻿function Test-PSModule {
+﻿<#
+.SYNOPSIS
+Tests a PowerShell module using Pester.
+
+.DESCRIPTION
+Tests a PowerShell module using Pester. The function installs Pester, removes any existing module with the same name,
+and runs Pester with a configuration optimized for running in a CI pipeline.
+
+.PARAMETER Name
+The name of the module.
+
+.PARAMETER SourceDirectory
+The source directory of the module. Should be a nested directory that doesn't contain and build scripts.
+
+.PARAMETER Tag
+The tag to filter tests by.
+
+.EXAMPLE
+Test-PSModule -Name 'MyModule' -SourceDirectory "$PWD/src" -Tag 'Unit'
+
+.NOTES
+N/A
+#>
+function Test-PSModule {
     [CmdletBinding()]
     param (
         [String]$Name = 'PSModule',

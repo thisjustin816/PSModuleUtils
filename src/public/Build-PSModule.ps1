@@ -1,3 +1,47 @@
+﻿<#
+.SYNOPSIS
+Builds a PowerShell module formatted like the ones located at github.com/thisjustin816.
+
+.DESCRIPTION
+Builds a PowerShell module formatted like the ones located at github.com/thisjustin816.
+- Moves all public functions to a single .psm1 file and all private functions to a private folder.
+- Removes any init blocks outside of the function.
+- Formats the private function dot sources for the expected folder structure.
+- Creates a module manifest.
+
+.PARAMETER Name
+The name of the module.
+
+.PARAMETER Version
+The version of the module.
+
+.PARAMETER Description
+The description of the module.
+
+.PARAMETER Tags
+The tags for the module.
+
+.PARAMETER SourceDirectory
+The source directory of the module. Should be a nested directory that doesn't contain and build scripts.
+
+.PARAMETER OutputDirectory
+The directory to output the .psm1 module and .psd1 manifest.
+
+.PARAMETER FixScriptAnalyzer
+Whether to fix the ScriptAnalyzer issues.
+
+.EXAMPLE
+$BuildPSModule = @{
+    Name        = 'MyModule'
+    Version     = '1.0.0'
+    Description = 'A PowerShell module.'
+    Tags        = ('PSEdition_Desktop', 'PSEdition_Core')
+}
+Build-PSModule @BuildPSModule
+
+.NOTES
+N/A
+#>
 function Build-PSModule {
     [CmdletBinding()]
     param (
@@ -44,7 +88,7 @@ function Build-PSModule {
                 $functionContent.IndexOf($functionContent -match "function $functionName")[0]
             ) | Where-Object -FilterScript { $_ -ge 0 } | Sort-Object | Select-Object -First 1
             $functionContent = $functionContent[$startIndex..($functionContent.Length - 1)]
-            
+
             # Format the private function dot sources for the expected folder structure
             $functionContent = $functionContent -replace (
                 '(?<=\. \$PSScriptRoot/|& \$PSScriptRoot/)\.\./\.\./private',
