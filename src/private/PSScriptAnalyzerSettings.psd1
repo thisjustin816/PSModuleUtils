@@ -91,7 +91,8 @@
             )
         }
         PSUseConsistentIndentation       = @{
-            Enable              = $true
+            # Formatting for indentation within bracketed multi-line blocks is wrong. Disable until fixed.
+            Enable              = $false
             IndentationSize     = 4
             PipelineIndentation = 'IncreaseIndentationForFirstPipeline'
             Kind                = 'space'
