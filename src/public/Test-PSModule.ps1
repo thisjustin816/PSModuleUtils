@@ -12,6 +12,9 @@ The name of the module.
 .PARAMETER SourceDirectory
 The source directory of the module. Should be a nested directory that doesn't contain and build scripts.
 
+.PARAMETER Exclude
+The directories to exclude from testing and code coverage.
+
 .PARAMETER Tag
 The tag to filter tests by.
 
@@ -26,6 +29,7 @@ function Test-PSModule {
     param (
         [String]$Name = 'PSModule',
         [String]$SourceDirectory = "$PWD/src",
+        [String[]]$Exclude,
         [String[]]$Tag
     )
 
@@ -35,6 +39,7 @@ function Test-PSModule {
     $config = New-PesterConfiguration @{
         Run          = @{
             Path = $SourceDirectory
+            ExcludePath = $Exclude
         }
         CodeCoverage = @{
             Enabled    = $true
