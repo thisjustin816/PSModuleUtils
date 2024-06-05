@@ -38,7 +38,7 @@ function Test-PSModule {
     Get-Module -Name $Name -All | Remove-Module -Force -ErrorAction SilentlyContinue
     $config = New-PesterConfiguration @{
         Run          = @{
-            Path = $SourceDirectory
+            Path        = $SourceDirectory
             ExcludePath = $Exclude
         }
         CodeCoverage = @{
@@ -61,5 +61,7 @@ function Test-PSModule {
     $config.Run.Exit = $true
     $config.Run.Throw = $true
 
+    Write-Verbose -Message 'Running Pester tests with the following configuration:'
+    Write-Verbose -Message ( $config | ConvertTo-Json -Depth 5 )
     Invoke-Pester -Configuration $config
 }

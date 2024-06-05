@@ -43,6 +43,7 @@ Build-PSModule @BuildPSModule
 N/A
 #>
 function Build-PSModule {
+    [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingInvokeExpression', '')]
     [CmdletBinding()]
     param (
         [String]$Name = 'PSModule',
@@ -125,7 +126,15 @@ function Build-PSModule {
     }
     $requiredModulesStatement = Get-Content -Path "$SourceDirectory\$Name.psm1" |
         Where-Object -FilterScript { $_ -match '#Requires' }
-    $requiredModules = (($requiredModulesStatement -split '-Modules ')[1] -split ',').Trim()
+    $requiredModules = (($requiredModulesStatement -split '-Modules ')[1] -split ',').Trim() |
+        ForEach-Object {
+            if ($_ -match '@{') {
+                Invoke-Expression -Command $_
+            }
+            else {
+                $_
+            }
+        }
     $moduleVersion, $modulePrerelease = $Version -split '-', 2
     $newModuleManifest = @{
         Path = $manifestPath
