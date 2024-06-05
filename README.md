@@ -29,13 +29,14 @@ The folder structure should be maintained like the example below:
 
 ```console
 \MODULEREPODIRECTORY
+├───.github
+│   └───workflows
 ├───.gitignore
-├───azure-pipelines.yml
+├───LICENSE
+├───README.md
 │
-└───ModuleName
+└───src
     ├───ModuleName.Module.Tests.ps1
-    ├───ModuleName.nuspec
-    ├───ModuleName.psd1
     ├───ModuleName.psm1
     │
     public
