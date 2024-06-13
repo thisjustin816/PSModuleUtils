@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Tests a PowerShell module using Pester.
 
@@ -32,8 +32,6 @@ function Test-PSModule {
         [String[]]$Exclude,
         [String[]]$Tag
     )
-
-    Install-Module -Name Pester -Force -AllowClobber -SkipPublisherCheck
 
     Get-Module -Name $Name -All | Remove-Module -Force -ErrorAction SilentlyContinue
     $config = New-PesterConfiguration @{
