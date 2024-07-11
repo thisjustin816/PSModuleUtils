@@ -33,6 +33,11 @@ function Test-PSModule {
         [String[]]$Tag
     )
 
+    $testFiles = Get-ChildItem -Path $SourceDirectory -Filter '*.Tests.ps1' -Recurse
+    if (-not $testFiles) {
+        Write-Warning -Message "No test files found in $SourceDirectory"
+        return
+    }
     Get-Module -Name $Name -All | Remove-Module -Force -ErrorAction SilentlyContinue
     $config = New-PesterConfiguration @{
         Run          = @{
