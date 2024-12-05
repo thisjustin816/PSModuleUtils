@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Builds a PowerShell module formatted like the ones located at github.com/thisjustin816.
 
@@ -138,7 +138,7 @@ function Build-PSModule {
     $moduleVersion, $modulePrerelease = $Version -split '-', 2
     $newModuleManifest = @{
         Path = $manifestPath
-        Author = ( & git log --format='%aN' | Sort-Object -Unique )
+        Author = (( & git log --format='%aN' -- . | Sort-Object -Unique ) -join ', ')
         CompanyName = $companyName
         Copyright = "(c) $( Get-Date -Format yyyy ) $companyName. All rights reserved."
         RootModule = "$Name.psm1"
