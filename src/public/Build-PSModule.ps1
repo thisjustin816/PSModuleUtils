@@ -138,7 +138,7 @@ function Build-PSModule {
     $moduleVersion, $modulePrerelease = $Version -split '-', 2
     $newModuleManifest = @{
         Path = $manifestPath
-        Author = (( & git log --format='%aN' | Sort-Object -Unique ) -join ', ')
+        Author = (( & git log --format='%aN' -- . | Sort-Object -Unique ) -join ', ')
         CompanyName = $companyName
         Copyright = "(c) $( Get-Date -Format yyyy ) $companyName. All rights reserved."
         RootModule = "$Name.psm1"
