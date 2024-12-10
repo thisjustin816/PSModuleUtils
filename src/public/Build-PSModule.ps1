@@ -21,6 +21,9 @@ The description of the module.
 .PARAMETER Tags
 The tags for the module.
 
+.PARAMETER LicenseUri
+The URL for the repo's license.
+
 .PARAMETER SourceDirectory
 The source directory of the module. Should be a nested directory that doesn't contain and build scripts.
 
@@ -50,6 +53,7 @@ function Build-PSModule {
         [String]$Version = '0.0.1',
         [String]$Description = 'A PowerShell module.',
         [String[]]$Tags = @('PSEdition_Desktop', 'PSEdition_Core', 'Windows'),
+        [String]$LicenseUri = 'https://opensource.org/licenses/MIT',
         [String]$SourceDirectory = "$PWD/src",
         [String]$OutputDirectory = "$PWD/out",
         [Switch]$FixScriptAnalyzer
@@ -62,6 +66,7 @@ function Build-PSModule {
             Version           = $Version
             Description       = $Description
             Tags              = $Tags
+            LicenseUri        = $LicenseUri
             SourceDirectory   = $SourceDirectory
             OutputDirectory   = $OutputDirectory
             FixScriptAnalyzer = $FixScriptAnalyzer
@@ -97,10 +102,19 @@ function Build-PSModule {
                 Compare-Object -ReferenceObject $functionContent -DifferenceObject $originalFunctionContent |
                     Format-Table |
                     Out-String
-            )
-            $moduleContent += ''
-            $moduleContent += $functionContent
-        }
+                )
+                $moduleContent += ''
+                $moduleContent += $functionContent
+            }
+
+    $srcModuleContent = Get-Content -Path "$SourceDirectory\$Name.psm1" -Raw
+    $startIndex = $srcModuleContent.IndexOf('Get-ChildItem')
+    $subString = $srcModuleContent.Substring($startIndex)
+    $braceIndex = $subString.IndexOf('}')
+    $moduleScriptContent = $subString.Substring($braceIndex + 1)
+    if ($moduleScriptContent) {
+        $moduleContent += $moduleScriptContent
+    }
 
     $moduleContent | Set-Content -Path "$ModuleOutputDirectory/$name.psm1" -Force
     $null = New-Item -Path "$ModuleOutputDirectory/private" -ItemType Directory -Force
@@ -124,7 +138,7 @@ function Build-PSModule {
     else {
         ( New-Guid ).Guid
     }
-    $requiredModulesStatement = Get-Content -Path "$SourceDirectory\$Name.psm1" |
+    $requiredModulesStatement = $srcModuleContent |
         Where-Object -FilterScript { $_ -match '#Requires' }
     $requiredModules = (($requiredModulesStatement -split '-Modules ')[1] -split ',').Trim() |
         ForEach-Object {
@@ -137,21 +151,21 @@ function Build-PSModule {
         }
     $moduleVersion, $modulePrerelease = $Version -split '-', 2
     $newModuleManifest = @{
-        Path = $manifestPath
-        Author = (( & git log --format='%aN' -- . | Sort-Object -Unique ) -join ', ')
-        CompanyName = $companyName
-        Copyright = "(c) $( Get-Date -Format yyyy ) $companyName. All rights reserved."
-        RootModule = "$Name.psm1"
-        ModuleVersion = $moduleVersion
-        Guid = $guid
-        Description = $Description
-        PowerShellVersion = 5.1
-        FunctionsToExport = $functionNames
+        Path                 = $manifestPath
+        Author               = (( & git log --format='%aN' -- . | Sort-Object -Unique ) -join ', ')
+        CompanyName          = $companyName
+        Copyright            = "(c) $( Get-Date -Format yyyy ) $companyName. All rights reserved."
+        RootModule           = "$Name.psm1"
+        ModuleVersion        = $moduleVersion
+        Guid                 = $guid
+        Description          = $Description
+        PowerShellVersion    = 5.1
+        FunctionsToExport    = $functionNames
         CompatiblePSEditions = ('Desktop', 'Core')
-        Tags = $Tags
-        ProjectUri = $repoUrl
-        LicenseUri = 'https://opensource.org/licenses/MIT'
-        ReleaseNotes = ( git log -1 --pretty=%B )[0]
+        Tags                 = $Tags
+        ProjectUri           = $repoUrl
+        LicenseUri           = $LicenseUri
+        ReleaseNotes         = ( git log -1 --pretty=%B )[0]
     }
     if ($requiredModules) {
         $newModuleManifest['RequiredModules'] = $requiredModules
