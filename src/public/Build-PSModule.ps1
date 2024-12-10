@@ -102,10 +102,10 @@ function Build-PSModule {
                 Compare-Object -ReferenceObject $functionContent -DifferenceObject $originalFunctionContent |
                     Format-Table |
                     Out-String
-                )
-                $moduleContent += ''
-                $moduleContent += $functionContent
-            }
+            )
+            $moduleContent += ''
+            $moduleContent += $functionContent
+        }
 
     $srcModuleContent = Get-Content -Path "$SourceDirectory\$Name.psm1" -Raw
     $startIndex = $srcModuleContent.IndexOf('Get-ChildItem')
@@ -138,7 +138,7 @@ function Build-PSModule {
     else {
         ( New-Guid ).Guid
     }
-    $requiredModulesStatement = $srcModuleContent |
+    $requiredModulesStatement = $srcModuleContent.Split("`n") |
         Where-Object -FilterScript { $_ -match '#Requires' }
     $requiredModules = (($requiredModulesStatement -split '-Modules ')[1] -split ',').Trim() |
         ForEach-Object {
