@@ -42,11 +42,30 @@ function Publish-PSModule {
             -ApiKey $ApiKey `
             -Repository $Repository
 
-        Find-PSResource `
-            -Name $Name `
-            -Version $versionedFolder.BaseName `
-            -Prerelease `
-            -Repository $Repository
+        $maxRetries = 5
+        $attempt = 0
+        $delayIntervals = 1, 2, 3, 5, 8
+        do {
+            try {
+                $publishedModule = Find-PSResource `
+                    -Name $Name `
+                    -Version $versionedFolder.BaseName `
+                    -Prerelease `
+                    -Repository $Repository
+                break
+            }
+            catch {
+                Write-Verbose -Message (
+                    "Couldn't find published module. Retrying after $($delayInterval[$attempt]) seconds."
+                )
+                Start-Sleep -Seconds $delayIntervals[$attempt]
+                $attempt++
+                if ($attempt -ge $maxRetries) {
+                    throw $_
+                }
+            }
+        }
+        while (-not $publishedModule -and $attempt -lt $maxRetries)
     }
     else {
         Write-Warning -Message "No module named $Name found to publish."
