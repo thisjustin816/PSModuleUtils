@@ -18,6 +18,9 @@ The version of the module.
 .PARAMETER Description
 The description of the module.
 
+.PARAMETER Guid
+The GUID of the module. If not provided it will look for the GUID in the PSGallery, or generate it.
+
 .PARAMETER Tags
 The tags for the module.
 
@@ -52,6 +55,7 @@ function Build-PSModule {
         [String]$Name = 'PSModule',
         [String]$Version = '0.0.1',
         [String]$Description = 'A PowerShell module.',
+        [String]$Guid,
         [String[]]$Tags = @('PSEdition_Desktop', 'PSEdition_Core', 'Windows'),
         [String]$LicenseUri = 'https://opensource.org/licenses/MIT',
         [String]$SourceDirectory = "$PWD/src",
@@ -129,15 +133,19 @@ function Build-PSModule {
     else {
         $env:USERDOMAIN
     }
-    $existingGuid = Find-Module -Name $Name -Repository PSGallery -ErrorAction SilentlyContinue |
-        Select-Object -ExpandProperty AdditionalMetadata |
-        Select-Object -ExpandProperty GUID
-    $guid = if ($existingGuid) {
-        $existingGuid
+
+    if (-not $Guid) {
+        $publishedModuleGuid = Find-Module -Name $Name -Repository PSGallery -ErrorAction SilentlyContinue |
+            Select-Object -ExpandProperty AdditionalMetadata |
+            Select-Object -ExpandProperty GUID
+        $Guid = if ($publishedModuleGuid) {
+            $publishedModuleGuid
+        }
+        else {
+            ( New-Guid ).Guid
+        }
     }
-    else {
-        ( New-Guid ).Guid
-    }
+
     $requiredModulesStatement = $srcModuleContent.Split("`n") |
         Where-Object -FilterScript { $_ -match '#Requires' }
     $requiredModules = (($requiredModulesStatement -split '-Modules ')[1] -split ',').Trim() |
