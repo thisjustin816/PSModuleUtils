@@ -64,18 +64,7 @@ function Build-PSModule {
     )
 
     Write-Host -Object 'Building with the following parameters:'
-    Write-Host -Object (
-        [PSCustomObject]@{
-            Name              = $Name
-            Version           = $Version
-            Description       = $Description
-            Tags              = $Tags
-            LicenseUri        = $LicenseUri
-            SourceDirectory   = $SourceDirectory
-            OutputDirectory   = $OutputDirectory
-            FixScriptAnalyzer = $FixScriptAnalyzer
-        } | Format-List | Out-String
-    )
+    Write-Host -Object ( $PSBoundParameters | Out-String)
 
     Remove-Item -Path $OutputDirectory -Recurse -Force -ErrorAction SilentlyContinue
     $ModuleOutputDirectory = "$OutputDirectory/$Name/$Version"
@@ -186,7 +175,7 @@ function Build-PSModule {
         $newModuleManifest['Prerelease'] = $modulePrerelease
     }
     Write-Host -Object 'Creating module manifest...'
-    Write-Host -Object ( $newModuleManifest | Format-List | Out-String )
+    Write-Host -Object ( $newModuleManifest | Out-String )
     New-ModuleManifest @newModuleManifest
     Get-Item -Path $manifestPath
 
