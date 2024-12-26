@@ -55,7 +55,7 @@ function Publish-PSModule {
                 break
             }
             catch {
-                Write-Verbose -Message (
+                Write-Warning -Message (
                     "Couldn't find published module. Retrying after $($delayInterval[$attempt]) seconds."
                 )
                 Start-Sleep -Seconds $delayIntervals[$attempt]
