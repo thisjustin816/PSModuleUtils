@@ -126,7 +126,7 @@ function Build-PSModule {
         Copy-Item -Destination "$ModuleOutputDirectory/private" -Recurse -Force
 
     $manifestPath = "$ModuleOutputDirectory/$Name.psd1"
-    $repoUrl = ( & git config --get remote.origin.url ).Replace('.git', '/').Replace(' ', '%20')
+    $repoUrl = ( & git config --get remote.origin.url )
     $companyName = if ($repoUrl -match 'github') {
         $repoUrl.Split('/')[3]
     }
@@ -136,6 +136,7 @@ function Build-PSModule {
     else {
         $env:USERDOMAIN
     }
+    $projectUri = $repoUrl.Replace($companyName + '@', '').Replace('.git', '')
 
     if (-not $Guid) {
         $publishedModuleGuid = Find-Module -Name $Name -Repository PSGallery -ErrorAction SilentlyContinue |
@@ -174,7 +175,7 @@ function Build-PSModule {
         FunctionsToExport    = $functionNames
         CompatiblePSEditions = ('Desktop', 'Core')
         Tags                 = $Tags
-        ProjectUri           = $repoUrl
+        ProjectUri           = $projectUri
         LicenseUri           = $LicenseUri
         ReleaseNotes         = ( git log -1 --pretty=%B )[0]
     }
