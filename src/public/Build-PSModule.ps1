@@ -126,7 +126,7 @@ function Build-PSModule {
         Copy-Item -Destination "$ModuleOutputDirectory/private" -Recurse -Force
 
     $manifestPath = "$ModuleOutputDirectory/$Name.psd1"
-    $repoUrl = ( & git config --get remote.origin.url ).Replace('.git', '')
+    $repoUrl = ( & git config --get remote.origin.url ).Replace('.git', '').Replace(' ', '%20')
     $companyName = if ($repoUrl -match 'github') {
         $repoUrl.Split('/')[3]
     }
