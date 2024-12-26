@@ -181,6 +181,8 @@ function Build-PSModule {
     if ($modulePrerelease) {
         $newModuleManifest['Prerelease'] = $modulePrerelease
     }
+    Write-Host -Object 'Creating module manifest...'
+    Write-Host -Object ( $newModuleManifest | Format-List | Out-String )
     New-ModuleManifest @newModuleManifest
     Get-Item -Path $manifestPath
 
