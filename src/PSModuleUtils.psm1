@@ -1,4 +1,4 @@
-﻿#Requires -Modules @{ ModuleName = 'Pester'; ModuleVersion = '5.0'; MaximumVersion = '5.*' }, @{ ModuleName = 'PSScriptAnalyzer'; MaximumVersion = '1.*' }
+﻿#Requires -Modules @{ ModuleName = 'Pester'; ModuleVersion = '5.0'; MaximumVersion = '5.99.99' }, @{ ModuleName = 'PSScriptAnalyzer'; MaximumVersion = '1.99.99' }
 [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidLongLines', '')]
 [CmdletBinding()]
 param ()
