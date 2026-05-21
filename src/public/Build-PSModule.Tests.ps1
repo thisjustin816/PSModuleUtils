@@ -1,3 +1,7 @@
+﻿# Pester declares parameters in lowercase (e.g. -name on It).
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseCorrectCasing', '')]
+param ()
+
 Describe 'Integration Tests' -Tag 'Integration' {
     BeforeAll {
         Import-Module -Name "$PSScriptRoot/../PSModuleUtils.psm1" -Force
