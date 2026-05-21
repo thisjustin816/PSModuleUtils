@@ -1,4 +1,8 @@
-﻿Describe 'Module Validation' {
+﻿# Pester declares parameters in lowercase (e.g. -name on It).
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseCorrectCasing', '')]
+param ()
+
+Describe 'Module Validation' {
     BeforeAll {
         $Script:module = Get-Item $PSCommandPath.Replace('.Module.Tests.ps1', '.psm1' )
     }

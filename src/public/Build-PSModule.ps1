@@ -128,9 +128,19 @@ function Build-PSModule {
     $projectUri = $repoUrl.Replace($companyName + '@', '').Replace('.git', '')
 
     if (-not $Guid) {
-        $publishedModuleGuid = Find-Module -Name $Name -Repository PSGallery -ErrorAction SilentlyContinue |
-            Select-Object -ExpandProperty AdditionalMetadata |
-            Select-Object -ExpandProperty GUID
+        $publishedModuleGuid = $null
+        $guidLookupPath = Join-Path -Path $env:TEMP -ChildPath "psmodule-guid-$(( New-Guid ).Guid)"
+        try {
+            New-Item -ItemType Directory -Path $guidLookupPath -Force | Out-Null
+            Save-PSResource -Name $Name -Repository PSGallery -Path $guidLookupPath -TrustRepository -ErrorAction SilentlyContinue
+            $publishedManifest = Get-ChildItem -Path $guidLookupPath -Filter "$Name.psd1" -Recurse | Select-Object -First 1
+            if ($publishedManifest) {
+                $publishedModuleGuid = (Import-PowerShellDataFile -Path $publishedManifest.FullName).Guid
+            }
+        }
+        finally {
+            Remove-Item -Path $guidLookupPath -Recurse -Force -ErrorAction SilentlyContinue
+        }
         $Guid = if ($publishedModuleGuid) {
             $publishedModuleGuid
         }

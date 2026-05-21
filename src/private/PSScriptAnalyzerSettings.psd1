@@ -44,60 +44,86 @@
     # You can use rule configuration to configure rules that support it:
 
     Rules        = @{
-        PSAlignAssignmentStatement       = @{
+        PSAlignAssignmentStatement                 = @{
             Enable         = $true
             CheckHashtable = $true
         }
-        PSAvoidLongLines                 = @{
+        PSAvoidLongLines                           = @{
             Enable            = $true
             MaximumLineLength = 120
         }
-        PSAvoidOverwritingBuiltInCmdlets = @{
+        PSAvoidExclaimOperator                     = @{
+            Enable = $true
+        }
+        PSAvoidMultipleTypeAttributes              = @{
+            Enable = $true
+        }
+        PSAvoidOverwritingBuiltInCmdlets           = @{
+            # core-6.1.0-windows is the newest profile bundled with PSScriptAnalyzer.
             PowerShellVersion = @('core-6.1.0-windows')
         }
-        PSAvoidUsingCmdletAliases        = @{
+        PSAvoidSemicolonsAsLineTerminators         = @{
+            Enable = $true
+        }
+        PSAvoidUsingAllowUnencryptedAuthentication = @{
+            Enable = $true
+        }
+        PSAvoidUsingBrokenHashAlgorithms           = @{
+            Enable = $true
+        }
+        PSAvoidUsingCmdletAliases                  = @{
             allowlist = @()
         }
-        PSPlaceCloseBrace                = @{
+        PSAvoidUsingDoubleQuotesForConstantString  = @{
+            Enable = $true
+        }
+        PSPlaceCloseBrace                          = @{
             Enable             = $true
             NoEmptyLineBefore  = $true
             IgnoreOneLineBlock = $true
             NewLineAfter       = $true
         }
-        PSPlaceOpenBrace                 = @{
+        PSPlaceOpenBrace                           = @{
             Enable             = $true
             OnSameLine         = $true
             NewLineAfter       = $true
             IgnoreOneLineBlock = $true
         }
-        PSProvideCommentHelp             = @{
+        PSProvideCommentHelp                       = @{
             Enable                  = $true
             ExportedOnly            = $false
             BlockComment            = $true
             VSCodeSnippetCorrection = $true
             Placement               = 'before'
         }
-        PSReviewUnusedParameter          = @{
+        PSReviewUnusedParameter                    = @{
             CommandsToTraverse = @()
         }
-        PSUseCompatibleCmdlets           = @{
+        PSUseCompatibleCmdlets                     = @{
+            # core-6.1.0-windows is the newest profile bundled with PSScriptAnalyzer.
             compatibility = @('core-6.1.0-windows')
         }
-        PSUseCompatibleSyntax            = @{
+        PSUseCompatibleSyntax                      = @{
             Enable         = $true
             TargetVersions = @(
-                '6.0',
+                '7.0',
                 '5.1'
             )
         }
-        PSUseConsistentIndentation       = @{
+        PSUseConsistentParameterSetName            = @{
+            Enable = $true
+        }
+        PSUseConsistentParametersKind              = @{
+            Enable = $true
+        }
+        PSUseConsistentIndentation                 = @{
             # Formatting for indentation within bracketed multi-line blocks is wrong. Disable until fixed.
             Enable              = $false
             IndentationSize     = 4
             PipelineIndentation = 'IncreaseIndentationForFirstPipeline'
             Kind                = 'space'
         }
-        PSUseConsistentWhitespace        = @{
+        PSUseConsistentWhitespace                  = @{
             Enable                                  = $true
             CheckInnerBrace                         = $true
             CheckOpenBrace                          = $true
@@ -109,10 +135,13 @@
             CheckParameter                          = $true
             IgnoreAssignmentOperatorInsideHashTable = $true
         }
-        PSUseCorrectCasing               = @{
+        PSUseCorrectCasing                         = @{
             Enable = $true
         }
-        PSUseSingularNouns               = @{
+        PSUseSingleValueFromPipelineParameter      = @{
+            Enable = $true
+        }
+        PSUseSingularNouns                         = @{
             Enable        = $true
             NounAllowList = 'Data', 'Windows'
         }
