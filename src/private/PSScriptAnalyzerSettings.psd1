@@ -74,6 +74,21 @@
         PSAvoidUsingCmdletAliases                  = @{
             allowlist = @()
         }
+        PSAvoidUsingPositionalParameters           = @{
+            CommandAllowList = @(
+                'ForEach-Object'
+                'Join-Path'
+                'Where-Object'
+                'Write-Debug'
+                'Write-Error'
+                'Write-Host'
+                'Write-Information'
+                'Write-Output'
+                'Write-Progress'
+                'Write-Verbose'
+                'Write-Warning'
+            )
+        }
         PSAvoidUsingDoubleQuotesForConstantString  = @{
             Enable = $true
         }
