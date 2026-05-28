@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Invokes PSScriptAnalyzer on a directory using a more strict set of rules than default.
 
@@ -28,12 +28,18 @@ function Invoke-PSModuleAnalyzer {
         [Switch]$Fix
     )
 
-    Invoke-ScriptAnalyzer `
-        -Path $SourceDirectory `
-        -Settings $Settings `
-        -Recurse `
-        -Severity Information `
-        -Fix:$Fix `
-        -EnableExit:(!$Fix) `
-        -ReportSummary
+    $scriptAnalyzerArgs = @{
+        Path          = $SourceDirectory
+        Settings      = $Settings
+        Recurse       = $true
+        Severity      = 'Information'
+        EnableExit    = (-not $Fix)
+        ReportSummary = $true
+    }
+
+    if ($Fix) {
+        $scriptAnalyzerArgs.Fix = $true
+    }
+
+    Invoke-ScriptAnalyzer @scriptAnalyzerArgs
 }

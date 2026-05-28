@@ -117,8 +117,7 @@
             Enable = $true
         }
         PSUseConsistentIndentation                 = @{
-            # Formatting for indentation within bracketed multi-line blocks is wrong. Disable until fixed.
-            Enable              = $false
+            Enable              = $true
             IndentationSize     = 4
             PipelineIndentation = 'IncreaseIndentationForFirstPipeline'
             Kind                = 'space'
@@ -136,7 +135,9 @@
             IgnoreAssignmentOperatorInsideHashTable = $true
         }
         PSUseCorrectCasing                         = @{
-            Enable = $true
+            # Throws when command discovery encounters some Crescendo-generated modules.
+            # Disable until fixed.
+            Enable = $false
         }
         PSUseSingleValueFromPipelineParameter      = @{
             Enable = $true
