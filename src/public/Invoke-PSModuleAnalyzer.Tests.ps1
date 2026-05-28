@@ -16,7 +16,7 @@ Describe 'Unit Tests' -Tag 'Unit' {
         Normalizes here-string content before writing it to TestDrive so
         Invoke-ScriptAnalyzer -Fix tests do not fail on mixed line endings.
         #>
-        function Set-NormalizedTestContent {
+        function Export-NormalizedTestContent {
             param (
                 [Parameter(Mandatory)]
                 [string]$Path,
@@ -179,7 +179,7 @@ $ScriptBlockCases = @(
 $NestedFunctionRecords
 $ScriptBlockCases
 '@
-        Set-NormalizedTestContent -Path $fixturePath -Content $fixtureContent
+        Export-NormalizedTestContent -Path $fixturePath -Content $fixtureContent
 
         $settingsPath = Join-Path -Path $TestDrive -ChildPath 'IndentationSettings.psd1'
         $settingsContent = @'
@@ -197,7 +197,7 @@ $ScriptBlockCases
     }
 }
 '@
-        Set-NormalizedTestContent -Path $settingsPath -Content $settingsContent
+        Export-NormalizedTestContent -Path $settingsPath -Content $settingsContent
 
         $before = Get-Content -Path $fixturePath -Raw
         Invoke-PSModuleAnalyzer -SourceDirectory $fixtureDir -Settings $settingsPath -Fix
