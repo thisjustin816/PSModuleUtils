@@ -1,13 +1,23 @@
 $BuildPSModule = @{
-    Name        = 'PSModuleUtils'
-    Version     = '1.8.0'
-    Guid        = '3c63c38f-c32c-4837-a6fa-0b456f4099ce'
-    Description = 'A module with helper functions to build and publish PowerShell modules to the PSGallery.'
-    Tags        = ('PSEdition_Desktop', 'PSEdition_Core', 'Windows')
+    Name      = 'PSModuleUtils'
+    Version   = '2.0.0'
+    CopyPaths = 'Settings'
 }
 
 Push-Location -Path $PSScriptRoot
-Import-Module -Name "$PSScriptRoot/src/$($BuildPSModule['Name']).psm1" -Force
+Import-Module -FullyQualifiedName @{
+    ModuleName     = 'ModuleBuilder'
+    ModuleVersion  = '3.0.0'
+    MaximumVersion = '3.*'
+},
+@{
+    ModuleName     = 'Metadata'
+    ModuleVersion  = '1.5.0'
+    MaximumVersion = '1.*'
+} -ErrorAction Stop
+Import-Module -Name 'Pester' -MinimumVersion '5.0' -MaximumVersion '5.*' -ErrorAction Stop
+Get-ChildItem -Path "$PSScriptRoot/src/Private", "$PSScriptRoot/src/Public" -Filter '*.ps1' -Recurse |
+    ForEach-Object -Process { . $_.FullName }
 if (-not $env:GITHUB_ACTIONS) {
     Invoke-PSModuleAnalyzer -Fix
 }

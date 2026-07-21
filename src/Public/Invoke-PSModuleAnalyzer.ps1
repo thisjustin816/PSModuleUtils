@@ -9,10 +9,14 @@ Invokes PSScriptAnalyzer on a directory using a more strict set of rules than de
 The directory to analyze.
 
 .PARAMETER Settings
-The settings file to use. Defaults to internal custom file.
+The settings file to use. Defaults to the bundled PSScriptAnalyzerSettings.psd1, resolved for both a
+source checkout and a built module layout.
 
 .PARAMETER Fix
 Whether to fix the issues found.
+
+.OUTPUTS
+Microsoft.Windows.PowerShell.ScriptAnalyzer.Generic.DiagnosticRecord
 
 .EXAMPLE
 Invoke-PSModuleAnalyzer -SourceDirectory $PWD/src -Fix
@@ -22,9 +26,10 @@ N/A
 #>
 function Invoke-PSModuleAnalyzer {
     [CmdletBinding()]
+    [OutputType('Microsoft.Windows.PowerShell.ScriptAnalyzer.Generic.DiagnosticRecord')]
     param (
         [String]$SourceDirectory = "$PWD/src",
-        [String]$Settings = "$PSScriptRoot/../private/PSScriptAnalyzerSettings.psd1",
+        [String]$Settings = (Get-PSModuleAnalyzerSettingsPath -CallerScriptRoot $PSScriptRoot),
         [Switch]$Fix
     )
 
@@ -35,11 +40,15 @@ function Invoke-PSModuleAnalyzer {
         Severity      = 'Information'
         EnableExit    = (-not $Fix)
         ReportSummary = $true
+        ErrorAction   = 'Stop'
     }
 
     if ($Fix) {
         $scriptAnalyzerArgs.Fix = $true
     }
 
-    Invoke-ScriptAnalyzer @scriptAnalyzerArgs
+    # After PSScriptAnalyzer fixes recursive PSUseCorrectCasing command metadata resolution, uncomment this call
+    # and remove the private workaround and its tests.
+    # Invoke-ScriptAnalyzer @scriptAnalyzerArgs
+    Invoke-PSModuleAnalyzerCasingWorkaround @scriptAnalyzerArgs
 }

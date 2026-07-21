@@ -4,7 +4,7 @@ param ()
 
 Describe 'Unit Tests' -Tag 'Unit' {
     BeforeAll {
-        . $PSScriptRoot/Test-PSModule.ps1
+        . $PSScriptRoot/../src/Public/Test-PSModule.ps1
     }
 
     Context 'when no test files are found' {
@@ -14,7 +14,7 @@ Describe 'Unit Tests' -Tag 'Unit' {
             Mock Invoke-Pester {}
             Test-PSModule `
                 -Name 'TestModule' `
-                -SourceDirectory $emptyDir `
+                -TestPath $emptyDir `
                 -WarningVariable warnings `
                 -WarningAction SilentlyContinue
             ( $warnings -join ' ' ) | Should -Match 'No test files found'
@@ -31,15 +31,21 @@ Describe 'Unit Tests' -Tag 'Unit' {
             Mock Invoke-Pester {}
         }
 
-        It 'should invoke Pester with the source directory in the configuration' {
-            Test-PSModule -Name 'TestModule' -SourceDirectory $script:testDir
+        It 'should invoke Pester with the test path in the configuration' {
+            Test-PSModule -Name 'TestModule' -TestPath $script:testDir
             Should -Invoke Invoke-Pester -Times 1 -Exactly -ParameterFilter {
                 $Configuration.Run.Path.Value -contains $script:testDir
             }
         }
 
+        It 'should throw on failed tests without exiting the caller host' {
+            Test-PSModule -Name 'TestModule' -TestPath $script:testDir
+            Should -Invoke Invoke-Pester -Times 1 -Exactly -ParameterFilter {
+                $Configuration.Run.Throw.Value -and -not $Configuration.Run.Exit.Value
+            }
+        }
         It 'should set a Tag filter when -Tag is provided' {
-            Test-PSModule -Name 'TestModule' -SourceDirectory $script:testDir -Tag 'Unit'
+            Test-PSModule -Name 'TestModule' -TestPath $script:testDir -Tag 'Unit'
             Should -Invoke Invoke-Pester -Times 1 -Exactly -ParameterFilter {
                 $Configuration.Filter.Tag.Value -contains 'Unit'
             }
