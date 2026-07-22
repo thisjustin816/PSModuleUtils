@@ -4,7 +4,7 @@ param ()
 
 Describe 'Unit Tests' -Tag 'Unit' {
     BeforeAll {
-        . $PSScriptRoot/Publish-PSModule.ps1
+        . $PSScriptRoot/../src/Public/Publish-PSModule.ps1
     }
 
     Context 'when no versioned folder exists' {

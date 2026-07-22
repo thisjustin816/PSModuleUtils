@@ -10,7 +10,10 @@ and runs Pester with a configuration optimized for running in a CI pipeline.
 The name of the module.
 
 .PARAMETER SourceDirectory
-The source directory of the module. Should be a nested directory that doesn't contain and build scripts.
+The source directory of the module. Used as the code coverage target, not for test discovery.
+
+.PARAMETER TestPath
+The directory to discover and run "*.Tests.ps1" files from.
 
 .PARAMETER Exclude
 The directories to exclude from testing and code coverage.
@@ -19,7 +22,7 @@ The directories to exclude from testing and code coverage.
 The tag to filter tests by.
 
 .EXAMPLE
-Test-PSModule -Name 'MyModule' -SourceDirectory "$PWD/src" -Tag 'Unit'
+Test-PSModule -Name 'MyModule' -SourceDirectory "$PWD/src" -TestPath "$PWD/tests" -Tag 'Unit'
 
 .NOTES
 N/A
@@ -29,23 +32,25 @@ function Test-PSModule {
     param (
         [String]$Name = 'PSModule',
         [String]$SourceDirectory = "$PWD/src",
+        [String]$TestPath = "$PWD/tests",
         [String[]]$Exclude,
         [String[]]$Tag
     )
 
-    $testFiles = Get-ChildItem -Path $SourceDirectory -Filter '*.Tests.ps1' -Recurse
+    $testFiles = Get-ChildItem -Path $TestPath -Filter '*.Tests.ps1' -Recurse -ErrorAction SilentlyContinue
     if (-not $testFiles) {
-        Write-Warning -Message "No test files found in $SourceDirectory"
+        Write-Warning -Message "No test files found in $TestPath"
         return
     }
     Get-Module -Name $Name -All | Remove-Module -Force -ErrorAction SilentlyContinue
     $config = New-PesterConfiguration @{
         Run          = @{
-            Path        = $SourceDirectory
+            Path        = $TestPath
             ExcludePath = $Exclude
         }
         CodeCoverage = @{
             Enabled    = $true
+            Path       = $SourceDirectory
             OutputPath = 'tests/coverage.xml'
         }
         TestResult   = @{
@@ -57,11 +62,9 @@ function Test-PSModule {
         }
     }
     if ($Tag) {
-        $config.Filter.Tag = 'Unit'
+        $config.Filter.Tag = $Tag
     }
 
-    # TODO: Remove after implementing test result publishing
-    $config.Run.Exit = $true
     $config.Run.Throw = $true
 
     Write-Verbose -Message 'Running Pester tests with the following configuration:'

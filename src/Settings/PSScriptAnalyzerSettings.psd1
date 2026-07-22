@@ -16,6 +16,13 @@
 
     # Severity = @('Error', 'Warning')
 
+    # Optional custom rule settings. Uncomment and adjust these when loading
+    # rules that are not bundled with PSScriptAnalyzer.
+
+    # CustomRulePath = @('/path/to/custom/rules')
+    # IncludeDefaultRules = $true
+    # RecurseCustomRulePath = $true
+
     # Analyze **only** the following rules. Use IncludeRules when you want
     # to invoke only a small subset of the default rules.
 
@@ -59,8 +66,10 @@
             Enable = $true
         }
         PSAvoidOverwritingBuiltInCmdlets           = @{
-            # core-6.1.0-windows is the newest profile bundled with PSScriptAnalyzer.
-            PowerShellVersion = @('core-6.1.0-windows')
+            PowerShellVersion = @(
+                'desktop-5.1.14393.206-windows'
+                'core-6.1.0-windows'
+            )
         }
         PSAvoidSemicolonsAsLineTerminators         = @{
             Enable = $true
@@ -115,8 +124,20 @@
             CommandsToTraverse = @()
         }
         PSUseCompatibleCmdlets                     = @{
-            # core-6.1.0-windows is the newest profile bundled with PSScriptAnalyzer.
-            compatibility = @('core-6.1.0-windows')
+            compatibility = @(
+                'desktop-5.1.14393.206-windows'
+                'core-6.1.0-windows'
+            )
+        }
+        PSUseCompatibleCommands                    = @{
+            Enable         = $true
+            TargetProfiles = @(
+                'win-48_x64_10.0.17763.0_5.1.17763.316_x64_4.0.30319.42000_framework'
+                'win-4_x64_10.0.18362.0_7.0.0_x64_3.1.2_core'
+            )
+            # ProfileDirPath = '/path/to/compatibility/profiles'
+            # Pester is a required module, so its version is controlled by each consuming module.
+            IgnoreCommands = @('Invoke-Pester')
         }
         PSUseCompatibleSyntax                      = @{
             Enable         = $true
@@ -124,6 +145,19 @@
                 '7.0',
                 '5.1'
             )
+        }
+        PSUseCompatibleTypes                       = @{
+            Enable         = $true
+            TargetProfiles = @(
+                'win-48_x64_10.0.17763.0_5.1.17763.316_x64_4.0.30319.42000_framework'
+                'win-4_x64_10.0.18362.0_7.0.0_x64_3.1.2_core'
+            )
+            # ProfileDirPath = '/path/to/compatibility/profiles'
+            IgnoreTypes    = @()
+        }
+        PSUseConstrainedLanguageMode               = @{
+            Enable           = $false
+            IgnoreSignatures = @()
         }
         PSUseConsistentParameterSetName            = @{
             Enable = $true
@@ -150,16 +184,17 @@
             IgnoreAssignmentOperatorInsideHashTable = $true
         }
         PSUseCorrectCasing                         = @{
-            # Throws when command discovery encounters some Crescendo-generated modules.
-            # Disable until fixed.
-            Enable = $false
+            Enable        = $true
+            CheckCommands = $true
+            CheckKeyword  = $true
+            CheckOperator = $true
         }
         PSUseSingleValueFromPipelineParameter      = @{
             Enable = $true
         }
         PSUseSingularNouns                         = @{
             Enable        = $true
-            NounAllowList = 'Data', 'Windows'
+            NounAllowList = 'Data', 'Metadata', 'Settings', 'Windows'
         }
     }
 }
