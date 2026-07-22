@@ -21,6 +21,15 @@ Describe 'Module Validation' {
             $builtScript | Should -Not -FileContentMatch '^Describe '
         }
 
+        It 'should produce a publishable package' {
+            $package = Compress-PSResource `
+                -Path $script:builtManifest.DirectoryName `
+                -DestinationPath $TestDrive `
+                -PassThru `
+                -ErrorAction Stop
+            $package.FullName | Should -Exist
+        }
+
         It 'should not export any package management functions' {
             Get-Module -Name 'PSModuleUtils' -All | Remove-Module -Force -ErrorAction SilentlyContinue
             $pkgMgmtFunctions = Get-Command -Module (

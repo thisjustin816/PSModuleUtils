@@ -13,11 +13,11 @@
     VariablesToExport    = @()
     AliasesToExport      = @()
     RequiredModules      = @(
-        @{ ModuleName = 'ModuleBuilder'; ModuleVersion = '3.0.0'; MaximumVersion = '3.*' }
-        @{ ModuleName = 'Metadata'; ModuleVersion = '1.5.0'; MaximumVersion = '1.*' }
-        @{ ModuleName = 'JBUtils'; ModuleVersion = '1.1.0'; MaximumVersion = '1.*' }
-        @{ ModuleName = 'Pester'; ModuleVersion = '5.0'; MaximumVersion = '5.*' }
-        @{ ModuleName = 'PSScriptAnalyzer'; ModuleVersion = '1.20.0'; MaximumVersion = '1.*' }
+        @{ ModuleName = 'ModuleBuilder'; ModuleVersion = '3.0.0'; MaximumVersion = '3.999.999' }
+        @{ ModuleName = 'Metadata'; ModuleVersion = '1.5.0'; MaximumVersion = '1.999.999' }
+        @{ ModuleName = 'JBUtils'; ModuleVersion = '1.1.0'; MaximumVersion = '1.999.999' }
+        @{ ModuleName = 'Pester'; ModuleVersion = '5.0'; MaximumVersion = '5.999.999' }
+        @{ ModuleName = 'PSScriptAnalyzer'; ModuleVersion = '1.20.0'; MaximumVersion = '1.999.999' }
         @{ ModuleName = 'Microsoft.PowerShell.PSResourceGet'; ModuleVersion = '1.0.0' }
     )
     PrivateData          = @{
