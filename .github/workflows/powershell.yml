@@ -19,5 +19,6 @@ jobs:
   analyze:
     uses: thisjustin816/reusable-workflows/.github/workflows/ps-scriptAnalyzer.yml@main
     with:
+      path: src
       use_local_psmoduleutils: true
     secrets: inherit
