@@ -1,6 +1,6 @@
 @{
     RootModule           = 'PSModuleUtils.psm1'
-    ModuleVersion        = '2.0.1'
+    ModuleVersion        = '2.1.0'
     GUID                 = '3c63c38f-c32c-4837-a6fa-0b456f4099ce'
     Author               = ''
     CompanyName          = ''

@@ -7,9 +7,9 @@ Compiles a module's public and private function files into a single versioned mo
 directory with ModuleBuilder's Build-Module, then stamps git-derived metadata (author, company,
 copyright, project URI, release notes) onto the built manifest with Update-Metadata.
 
-Files and directories that must remain separate in the published module, such as assemblies, schemas,
-templates, settings, and localized content, can be copied with CopyPaths. Copy paths retain their source
-names beneath the module output directory and are never concatenated into the generated .psm1.
+Files and directories outside the compiled source folders are copied into the published module automatically.
+Additional paths can be copied with CopyPaths. Copy paths retain their source names beneath the module output
+directory and are never concatenated into the generated .psm1.
 
 The source directory must contain a hand-authored manifest template named "<Name>.psd1" and the
 function folders it references. ModuleBuilder derives FunctionsToExport from the public filter and
@@ -21,7 +21,7 @@ pre-declare PrivateData.PSData.Prerelease and PrivateData.PSData.ReleaseNotes (e
 Run New-PSModuleManifest to generate a compatible manifest template for a module that does not have one.
 
 .PARAMETER Name
-The name of the module. The source manifest is expected at "<SourceDirectory>/<Name>.psd1".
+The name of the module. When omitted, the name is derived from the single module manifest in SourceDirectory.
 
 .PARAMETER Version
 The module version, optionally with a SemVer prerelease label (e.g. "2.0.0-alpha"). When omitted, the
@@ -40,9 +40,9 @@ The source subfolders, in load order, that ModuleBuilder concatenates into the b
 The filter identifying public (exported) function files, relative to the source directory.
 
 .PARAMETER CopyPaths
-Files or directories to copy recursively into the built module without compilation. Paths are relative
-to the source directory unless absolute. Use purpose-specific directories such as Assemblies, bin,
-Settings, Schemas, Templates, Resources, or culture names such as en-US.
+Additional files or directories to copy recursively into the built module without compilation. Paths are
+relative to the source directory unless absolute. Source-root items outside SourceDirectories are copied
+automatically.
 
 .PARAMETER SkipGitMetadata
 Skips stamping git-derived metadata onto the built manifest. Useful when building outside a git tree.
@@ -51,7 +51,10 @@ Skips stamping git-derived metadata onto the built manifest. Useful when buildin
 System.IO.FileInfo for the built module manifest.
 
 .EXAMPLE
-Build-PSModule -Name 'MyModule' -Version '2.0.0' -SourceDirectory "$PWD/src"
+Build-PSModule -SourceDirectory "$PWD/src"
+
+.EXAMPLE
+Build-PSModule -Name 'MyModule' -Version '2.0.0-preview1' -SourceDirectory "$PWD/src"
 
 .NOTES
 Requires the ModuleBuilder and Metadata modules.
@@ -60,7 +63,7 @@ function Build-PSModule {
     [CmdletBinding()]
     [OutputType([System.IO.FileInfo])]
     param (
-        [String]$Name = 'PSModule',
+        [String]$Name,
         [String]$Version,
         [String]$SourceDirectory = "$PWD/src",
         [String]$OutputDirectory = "$PWD/out",
@@ -72,9 +75,19 @@ function Build-PSModule {
 
     $ErrorActionPreference = 'Stop'
 
-    $sourceManifest = Join-Path -Path $SourceDirectory -ChildPath "$Name.psd1"
-    if (-not (Test-Path -Path $sourceManifest)) {
-        throw "Source manifest not found at '$sourceManifest'. Run New-PSModuleManifest to create one."
+    if ($Name) {
+        $sourceManifest = Join-Path -Path $SourceDirectory -ChildPath "$Name.psd1"
+        if (-not (Test-Path -Path $sourceManifest)) {
+            throw "Source manifest not found at '$sourceManifest'. Run New-PSModuleManifest to create one."
+        }
+    }
+    else {
+        $sourceManifests = @(Get-ChildItem -LiteralPath $SourceDirectory -Filter '*.psd1' -File)
+        if ($sourceManifests.Count -ne 1) {
+            throw "Expected one module manifest in '$SourceDirectory', but found $($sourceManifests.Count)."
+        }
+        $sourceManifest = $sourceManifests[0].FullName
+        $Name = $sourceManifests[0].BaseName
     }
 
     $canonicalSourceDirectories = @('Enum', 'Classes', 'Private', 'Public')
@@ -108,8 +121,28 @@ function Build-PSModule {
         Passthru                 = $true
     }
 
-    if ($CopyPaths.Count -gt 0) {
-        $buildModule['CopyPaths'] = $CopyPaths
+    $compiledSourceRoots = foreach ($sourceDirectoryName in $SourceDirectories) {
+        $normalizedSourceDirectory = $sourceDirectoryName -replace '\\', '/'
+        ($normalizedSourceDirectory -split '/', 2)[0]
+    }
+    $excludedSourceItems = @(
+        (Split-Path -Path $sourceManifest -Leaf)
+        "$Name.psm1"
+    )
+    $automaticCopyPaths = foreach ($sourceItem in Get-ChildItem -LiteralPath $SourceDirectory -Force) {
+        $isCompiledSourceDirectory = $sourceItem.PSIsContainer -and @(
+            $compiledSourceRoots | Where-Object { $sourceItem.Name -like $_ }
+        ).Count -gt 0
+        if (-not $isCompiledSourceDirectory -and $sourceItem.Name -notin $excludedSourceItems) {
+            $sourceItem.Name
+        }
+    }
+    $resolvedCopyPaths = @(
+        $automaticCopyPaths
+        $CopyPaths
+    ) | Select-Object -Unique
+    if ($resolvedCopyPaths.Count -gt 0) {
+        $buildModule['CopyPaths'] = $resolvedCopyPaths
     }
 
     if ($Version) {
