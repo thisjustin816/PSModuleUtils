@@ -13,7 +13,7 @@
     VariablesToExport    = @()
     AliasesToExport      = @()
     RequiredModules      = @(
-        @{ ModuleName = 'ModuleBuilder'; ModuleVersion = '3.0.0'; MaximumVersion = '3.999.999' }
+        @{ ModuleName = 'ModuleBuilder'; ModuleVersion = '3.2.18'; MaximumVersion = '3.999.999' }
         @{ ModuleName = 'Metadata'; ModuleVersion = '1.5.0'; MaximumVersion = '1.999.999' }
         @{ ModuleName = 'JBUtils'; ModuleVersion = '1.1.0'; MaximumVersion = '1.999.999' }
         @{ ModuleName = 'Pester'; ModuleVersion = '5.0'; MaximumVersion = '5.999.999' }
