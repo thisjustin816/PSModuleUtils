@@ -45,7 +45,8 @@ function Export-PSModuleAnalyzerSettings {
 
     try {
         $destinationPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path)
-    } catch {
+    }
+    catch {
         $pathError = $_
         throw "Destination path '$Path' could not be resolved: $($pathError.Exception.Message)"
     }

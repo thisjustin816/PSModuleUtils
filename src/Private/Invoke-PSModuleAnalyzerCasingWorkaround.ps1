@@ -111,11 +111,11 @@ function Invoke-PSModuleAnalyzerCasingWorkaround {
                         $casingResultCount++
                         $_
                     }
-            }
+                }
 
         Invoke-ScriptAnalyzer @recursiveAnalyzerArguments
 
-        if (-not $Fix -and $casingResultCount -gt 0) {
+        if ($EnableExit -and -not $Fix -and $casingResultCount -gt 0) {
             exit [Math]::Min($casingResultCount, 255)
         }
     }

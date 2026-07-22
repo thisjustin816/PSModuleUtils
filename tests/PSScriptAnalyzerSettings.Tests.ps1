@@ -55,6 +55,13 @@ Describe 'PSScriptAnalyzer settings' -Tag 'Unit' {
         $rule.CheckOperator | Should -BeTrue
     }
 
+    It 'should allow conventional collective nouns' {
+        $rule = $script:settings.Rules.PSUseSingularNouns
+
+        $rule.Enable | Should -BeTrue
+        ($rule.NounAllowList -join '|') | Should -BeExactly 'Data|Metadata|Settings|Windows'
+    }
+
     It 'should retain commented examples for path-dependent settings' {
         $settingsContent = Get-Content -Path $script:settingsPath -Raw
 

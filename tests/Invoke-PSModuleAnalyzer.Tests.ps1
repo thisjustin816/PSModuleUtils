@@ -46,7 +46,7 @@ Describe 'Unit Tests' -Tag 'Unit' {
             Should -Contain 'Microsoft.Windows.PowerShell.ScriptAnalyzer.Generic.DiagnosticRecord'
     }
 
-    It 'should configure the workaround call and only pass Fix in fix mode' {
+    It 'should configure the workaround call and control analyzer exit behavior' {
         Mock Invoke-PSModuleAnalyzerCasingWorkaround {}
 
         Invoke-PSModuleAnalyzer -SourceDirectory $TestDrive
@@ -54,6 +54,9 @@ Describe 'Unit Tests' -Tag 'Unit' {
             -not $PSBoundParameters.ContainsKey('Fix') -and
             $EnableExit -eq $true -and
             $ReportSummary -eq $true -and
+            $Severity -contains 'Error' -and
+            $Severity -contains 'Warning' -and
+            $Severity -contains 'Information' -and
             $ErrorAction -eq 'Stop'
         }
 
@@ -62,6 +65,20 @@ Describe 'Unit Tests' -Tag 'Unit' {
             $Fix -eq $true -and
             $EnableExit -eq $false -and
             $ReportSummary -eq $true -and
+            $Severity -contains 'Error' -and
+            $Severity -contains 'Warning' -and
+            $Severity -contains 'Information' -and
+            $ErrorAction -eq 'Stop'
+        }
+
+        Invoke-PSModuleAnalyzer -SourceDirectory $TestDrive -NoExit
+        Should -Invoke Invoke-PSModuleAnalyzerCasingWorkaround -Exactly -Times 1 -ParameterFilter {
+            -not $Fix -and
+            $EnableExit -eq $false -and
+            $ReportSummary -eq $true -and
+            $Severity -contains 'Error' -and
+            $Severity -contains 'Warning' -and
+            $Severity -contains 'Information' -and
             $ErrorAction -eq 'Stop'
         }
     }

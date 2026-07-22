@@ -194,7 +194,7 @@
         }
         PSUseSingularNouns                         = @{
             Enable        = $true
-            NounAllowList = 'Data', 'Metadata', 'Windows'
+            NounAllowList = 'Data', 'Metadata', 'Settings', 'Windows'
         }
     }
 }

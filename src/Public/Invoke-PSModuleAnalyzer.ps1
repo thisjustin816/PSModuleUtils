@@ -15,6 +15,10 @@ source checkout and a built module layout.
 .PARAMETER Fix
 Whether to fix the issues found.
 
+.PARAMETER NoExit
+Returns analyzer diagnostics without exiting the caller when violations are found. Use this when another
+command needs to process the diagnostics, such as converting them to SARIF.
+
 .OUTPUTS
 Microsoft.Windows.PowerShell.ScriptAnalyzer.Generic.DiagnosticRecord
 
@@ -30,15 +34,16 @@ function Invoke-PSModuleAnalyzer {
     param (
         [String]$SourceDirectory = "$PWD/src",
         [String]$Settings = (Get-PSModuleAnalyzerSettingsPath -CallerScriptRoot $PSScriptRoot),
-        [Switch]$Fix
+        [Switch]$Fix,
+        [Switch]$NoExit
     )
 
     $scriptAnalyzerArgs = @{
         Path          = $SourceDirectory
         Settings      = $Settings
         Recurse       = $true
-        Severity      = 'Information'
-        EnableExit    = (-not $Fix)
+        Severity      = 'Error', 'Warning', 'Information'
+        EnableExit    = (-not $Fix -and -not $NoExit)
         ReportSummary = $true
         ErrorAction   = 'Stop'
     }
