@@ -8,3 +8,4 @@ if (-not $env:GITHUB_ACTIONS) {
 $builtManifest = Build-PSModule
 Test-PSModule -Name $builtManifest.BaseName
 Pop-Location
+$builtManifest
