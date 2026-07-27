@@ -50,5 +50,22 @@ Describe 'Unit Tests' -Tag 'Unit' {
                 $Configuration.Filter.Tag.Value -contains 'Unit'
             }
         }
+
+        It 'should write reports beside the test sources by default' {
+            Test-PSModule -Name 'TestModule' -TestPath $script:testDir
+            Should -Invoke Invoke-Pester -Times 1 -Exactly -ParameterFilter {
+                $Configuration.TestResult.OutputPath.Value -eq (Join-Path "$PWD/tests" 'testResults.xml') -and
+                $Configuration.CodeCoverage.OutputPath.Value -eq (Join-Path "$PWD/tests" 'coverage.xml')
+            }
+        }
+
+        It 'should write reports to the requested results directory' {
+            $resultsDir = Join-Path -Path $TestDrive -ChildPath 'artifacts'
+            Test-PSModule -Name 'TestModule' -TestPath $script:testDir -ResultsDirectory $resultsDir
+            Should -Invoke Invoke-Pester -Times 1 -Exactly -ParameterFilter {
+                $Configuration.TestResult.OutputPath.Value -eq (Join-Path $resultsDir 'testResults.xml') -and
+                $Configuration.CodeCoverage.OutputPath.Value -eq (Join-Path $resultsDir 'coverage.xml')
+            }
+        }
     }
 }

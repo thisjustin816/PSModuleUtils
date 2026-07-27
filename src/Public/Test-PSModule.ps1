@@ -15,6 +15,11 @@ The source directory of the module. Used as the code coverage target, not for te
 .PARAMETER TestPath
 The directory to discover and run "*.Tests.ps1" files from.
 
+.PARAMETER ResultsDirectory
+The directory to write testResults.xml and coverage.xml to. Defaults to "tests" under the current
+directory, where they land beside the test sources; pass a build output directory to keep generated
+reports with the other build artifacts.
+
 .PARAMETER Exclude
 The directories to exclude from testing and code coverage.
 
@@ -33,6 +38,7 @@ function Test-PSModule {
         [String]$Name = 'PSModule',
         [String]$SourceDirectory = "$PWD/src",
         [String]$TestPath = "$PWD/tests",
+        [String]$ResultsDirectory = "$PWD/tests",
         [String[]]$Exclude,
         [String[]]$Tag
     )
@@ -51,11 +57,11 @@ function Test-PSModule {
         CodeCoverage = @{
             Enabled    = $true
             Path       = $SourceDirectory
-            OutputPath = 'tests/coverage.xml'
+            OutputPath = Join-Path $ResultsDirectory 'coverage.xml'
         }
         TestResult   = @{
             Enabled    = $true
-            OutputPath = 'tests/testResults.xml'
+            OutputPath = Join-Path $ResultsDirectory 'testResults.xml'
         }
         Output       = @{
             Verbosity = 'Detailed'
