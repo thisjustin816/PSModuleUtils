@@ -36,7 +36,7 @@ function Publish-PSModule {
 
     $versionedFolder = Get-ChildItem -Path "$OutputDirectory/$Name" | Select-Object -Last 1
     if ($versionedFolder) {
-        Import-Module -Name "$($versionedFolder.FullName)/$Name.psd1" -Force -PassThru
+        Import-Module -Name "$($versionedFolder.FullName)/$Name.psd1" -Force -Global
         Publish-PSResource `
             -Path $versionedFolder.FullName `
             -ApiKey $ApiKey `

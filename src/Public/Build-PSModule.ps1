@@ -186,6 +186,6 @@ function Build-PSModule {
     }
 
     Get-Module -Name $Name -All | Remove-Module -Force -ErrorAction SilentlyContinue
-    $null = Import-Module -Name $manifestPath -Force -PassThru -ErrorAction Stop
+    Import-Module -Name $manifestPath -Force -Global -ErrorAction Stop
     Get-Item -Path $manifestPath
 }

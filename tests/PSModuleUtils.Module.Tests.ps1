@@ -30,19 +30,60 @@ Describe 'Module Validation' {
             $package.FullName | Should -Exist
         }
 
-        It 'should not export any package management functions' {
+        It 'should export exactly its own public functions' {
             Get-Module -Name 'PSModuleUtils' -All | Remove-Module -Force -ErrorAction SilentlyContinue
-            $pkgMgmtFunctions = Get-Command -Module (
-                'PackageManagement', 'PowerShellGet', 'Microsoft.PowerShell.PSResourceGet'
+            $utils = Import-Module -Name $script:builtManifest.FullName -Force -PassThru
+
+            $expected = @(
+                Get-ChildItem -Path "$PSScriptRoot/../src/Public" -Filter '*.ps1' -File |
+                    ForEach-Object { $_.BaseName } |
+                    Sort-Object
             )
-            Import-Module -Name $script:builtManifest.FullName -Force
-            $moduleFunctions = Get-Command -Module 'PSModuleUtils'
-            foreach ($function in $pkgMgmtFunctions) {
-                foreach ($moduleFunction in $moduleFunctions) {
-                    $moduleFunction.Name | Should -Not -Be $function.Name
-                }
+
+            try {
+                @($utils.ExportedFunctions.Keys | Sort-Object) | Should -Be $expected
             }
-            Remove-Module -Name 'PSModuleUtils' -Force
+            finally {
+                Remove-Module -Name 'PSModuleUtils' -Force -ErrorAction SilentlyContinue
+            }
+        }
+
+        It 'should not nest the modules it builds inside itself' {
+            Get-Module -Name 'PSModuleUtils' -All | Remove-Module -Force -ErrorAction SilentlyContinue
+            $utils = Import-Module -Name $script:builtManifest.FullName -Force -PassThru
+
+            $probeRoot = Join-Path $TestDrive 'Nested.Probe'
+            $probeSource = Join-Path $probeRoot 'src'
+            $null = New-Item -ItemType Directory -Path (Join-Path $probeSource 'Public') -Force
+            Set-Content `
+                -LiteralPath (Join-Path $probeSource 'Public/Get-Probe.ps1') `
+                -Value 'function Get-Probe { 1 }'
+            Set-Content -LiteralPath (Join-Path $probeSource 'Nested.Probe.psd1') -Value @'
+@{
+    RootModule        = 'Nested.Probe.psm1'
+    ModuleVersion     = '0.0.1'
+    GUID              = '4c2f1b60-2f7a-4c58-9f3e-7d1b6a0c5e12'
+    FunctionsToExport = @()
+}
+'@
+
+            # Must go through the module's exported command: build.ps1 dot-sources src/Public, so a
+            # bare Build-PSModule call runs at script scope, nests nothing, and passes either way.
+            $null = & $utils.ExportedCommands['Build-PSModule'] `
+                -Name 'Nested.Probe' `
+                -SourceDirectory $probeSource `
+                -OutputDirectory (Join-Path $probeRoot 'out') `
+                -SkipGitMetadata
+
+            $nestedNames = @($utils.NestedModules | ForEach-Object { $_.Name })
+
+            try {
+                $nestedNames | Should -Not -Contain 'Nested.Probe'
+            }
+            finally {
+                Get-Module -Name 'Nested.Probe' -All | Remove-Module -Force -ErrorAction SilentlyContinue
+                Remove-Module -Name 'PSModuleUtils' -Force -ErrorAction SilentlyContinue
+            }
         }
     }
 }
