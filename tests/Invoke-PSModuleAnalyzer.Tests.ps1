@@ -52,7 +52,7 @@ Describe 'Unit Tests' -Tag 'Unit' {
         Invoke-PSModuleAnalyzer -SourceDirectory $TestDrive
         Should -Invoke Invoke-PSModuleAnalyzerCasingWorkaround -Exactly -Times 1 -ParameterFilter {
             -not $PSBoundParameters.ContainsKey('Fix') -and
-            $EnableExit -eq $true -and
+            $EnableExit -eq $false -and
             $ReportSummary -eq $true -and
             $Severity -contains 'Error' -and
             $Severity -contains 'Warning' -and
@@ -71,10 +71,10 @@ Describe 'Unit Tests' -Tag 'Unit' {
             $ErrorAction -eq 'Stop'
         }
 
-        Invoke-PSModuleAnalyzer -SourceDirectory $TestDrive -NoExit
+        Invoke-PSModuleAnalyzer -SourceDirectory $TestDrive -EnableExit
         Should -Invoke Invoke-PSModuleAnalyzerCasingWorkaround -Exactly -Times 1 -ParameterFilter {
             -not $Fix -and
-            $EnableExit -eq $false -and
+            $EnableExit -eq $true -and
             $ReportSummary -eq $true -and
             $Severity -contains 'Error' -and
             $Severity -contains 'Warning' -and
@@ -104,12 +104,22 @@ Describe 'Unit Tests' -Tag 'Unit' {
         "function Get-Top { 'ok' }" | Set-Content -Path "$fixtureDir/Top.ps1" -Encoding utf8
         'function Get-Nested { gci }' | Set-Content -Path "$nestedDir/Alias.ps1" -Encoding utf8
 
-        $recursiveFindings = Invoke-PSModuleAnalyzer -SourceDirectory $fixtureDir -NoExit
-        $topOnlyFindings = Invoke-PSModuleAnalyzer -SourceDirectory "$fixtureDir/*.ps1" -NoRecurse -NoExit
+        $recursiveFindings = Invoke-PSModuleAnalyzer -SourceDirectory $fixtureDir
+        $topOnlyFindings = Invoke-PSModuleAnalyzer -SourceDirectory "$fixtureDir/*.ps1" -NoRecurse
 
         $recursiveFindings.ScriptName | Should -Contain 'Alias.ps1'
         $topOnlyFindings.ScriptName | Should -Contain 'Top.ps1'
         $topOnlyFindings.ScriptName | Should -Not -Contain 'Alias.ps1'
+    }
+
+    It 'should hand a finding back to the caller rather than exiting on it' {
+        $fixtureDir = Join-Path -Path $TestDrive -ChildPath 'DefaultReturnFixture'
+        New-Item -ItemType Directory -Path $fixtureDir -Force | Out-Null
+        'function Get-Aliased { gci }' | Set-Content -Path "$fixtureDir/Aliased.ps1" -Encoding utf8
+
+        $findings = Invoke-PSModuleAnalyzer -SourceDirectory $fixtureDir
+
+        $findings.RuleName | Should -Contain 'PSAvoidUsingCmdletAliases'
     }
 
     It 'should preserve nested parentheses containing function definitions in fix mode' {
