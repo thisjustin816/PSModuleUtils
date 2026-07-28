@@ -83,6 +83,35 @@ Describe 'Unit Tests' -Tag 'Unit' {
         }
     }
 
+    It 'should analyze recursively by default and honor NoRecurse' {
+        Mock Invoke-PSModuleAnalyzerCasingWorkaround {}
+
+        Invoke-PSModuleAnalyzer -SourceDirectory $TestDrive
+        Should -Invoke Invoke-PSModuleAnalyzerCasingWorkaround -Exactly -Times 1 -ParameterFilter {
+            $Recurse -eq $true
+        }
+
+        Invoke-PSModuleAnalyzer -SourceDirectory $TestDrive -NoRecurse
+        Should -Invoke Invoke-PSModuleAnalyzerCasingWorkaround -Exactly -Times 1 -ParameterFilter {
+            $Recurse -eq $false
+        }
+    }
+
+    It 'should keep a nested directory out of a NoRecurse wildcard run' {
+        $fixtureDir = Join-Path -Path $TestDrive -ChildPath 'NoRecurseFixture'
+        $nestedDir = Join-Path -Path $fixtureDir -ChildPath 'Nested'
+        New-Item -ItemType Directory -Path $nestedDir -Force | Out-Null
+        "function Get-Top { 'ok' }" | Set-Content -Path "$fixtureDir/Top.ps1" -Encoding utf8
+        'function Get-Nested { gci }' | Set-Content -Path "$nestedDir/Alias.ps1" -Encoding utf8
+
+        $recursiveFindings = Invoke-PSModuleAnalyzer -SourceDirectory $fixtureDir -NoExit
+        $topOnlyFindings = Invoke-PSModuleAnalyzer -SourceDirectory "$fixtureDir/*.ps1" -NoRecurse -NoExit
+
+        $recursiveFindings.ScriptName | Should -Contain 'Alias.ps1'
+        $topOnlyFindings.ScriptName | Should -Contain 'Top.ps1'
+        $topOnlyFindings.ScriptName | Should -Not -Contain 'Alias.ps1'
+    }
+
     It 'should preserve nested parentheses containing function definitions in fix mode' {
         $fixtureDir = Join-Path -Path $TestDrive -ChildPath 'IndentationFixture'
         New-Item -ItemType Directory -Path $fixtureDir -Force | Out-Null

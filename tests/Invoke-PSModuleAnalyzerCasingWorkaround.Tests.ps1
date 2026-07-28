@@ -50,6 +50,38 @@ Describe 'Invoke-PSModuleAnalyzerCasingWorkaround' -Tag 'Unit' {
         $scriptAnalyzerArguments.Settings | Should -BeExactly $script:defaultSettingsPath
     }
 
+    It 'should enumerate only the top level for the casing pass when Recurse is false' {
+        $fixtureDir = Join-Path -Path $TestDrive -ChildPath 'NonRecursiveCasingFixture'
+        $nestedDir = Join-Path -Path $fixtureDir -ChildPath 'Nested'
+        $null = New-Item -ItemType Directory -Path $nestedDir -Force
+        "function Get-First { 'first' }" | Set-Content -Path "$fixtureDir/First.ps1"
+        "function Get-Second { 'second' }" | Set-Content -Path "$nestedDir/Second.ps1"
+        $scriptAnalyzerArguments = @{
+            Path          = $fixtureDir
+            Settings      = $script:defaultSettingsPath
+            Recurse       = $false
+            Severity      = 'Information'
+            EnableExit    = $false
+            ReportSummary = $true
+            ErrorAction   = 'Stop'
+        }
+        Mock Invoke-ScriptAnalyzer {}
+
+        Invoke-PSModuleAnalyzerCasingWorkaround @scriptAnalyzerArguments
+
+        Should -Invoke Invoke-ScriptAnalyzer -Exactly -Times 1 -ParameterFilter {
+            $Settings.IncludeRules -contains 'PSUseCorrectCasing' -and
+            $Path -like '*First.ps1'
+        }
+        Should -Invoke Invoke-ScriptAnalyzer -Exactly -Times 0 -ParameterFilter {
+            $Path -like '*Second.ps1'
+        }
+        Should -Invoke Invoke-ScriptAnalyzer -Exactly -Times 1 -ParameterFilter {
+            $Settings.Rules.PSUseCorrectCasing.Enable -eq $false -and
+            $Recurse -eq $false
+        }
+    }
+
     It 'should invoke PSScriptAnalyzer unchanged when command casing does not need the workaround' {
         $settingsPath = Join-Path -Path $TestDrive -ChildPath 'DisabledCasingSettings.psd1'
         @'
