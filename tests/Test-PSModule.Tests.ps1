@@ -51,11 +51,11 @@ Describe 'Unit Tests' -Tag 'Unit' {
             }
         }
 
-        It 'should write reports beside the test sources by default' {
+        It 'should write reports with the build artifacts by default' {
             Test-PSModule -Name 'TestModule' -TestPath $script:testDir
             Should -Invoke Invoke-Pester -Times 1 -Exactly -ParameterFilter {
-                $Configuration.TestResult.OutputPath.Value -eq (Join-Path "$PWD/tests" 'testResults.xml') -and
-                $Configuration.CodeCoverage.OutputPath.Value -eq (Join-Path "$PWD/tests" 'coverage.xml')
+                $Configuration.TestResult.OutputPath.Value -eq (Join-Path "$PWD/out/tests" 'testResults.xml') -and
+                $Configuration.CodeCoverage.OutputPath.Value -eq (Join-Path "$PWD/out/tests" 'coverage.xml')
             }
         }
 
