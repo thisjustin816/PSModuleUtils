@@ -24,6 +24,11 @@ command needs to process the diagnostics, such as converting them to SARIF.
 Analyzes only what SourceDirectory itself matches instead of descending into subdirectories. Use with
 a wildcard to keep a subtree with different rules, such as a tests folder, out of the run.
 
+.PARAMETER ErrorOnFinding
+Throws when the analyzer reports anything, rather than setting the process exit code. Required to
+gate a script that analyzes more than one path: PSScriptAnalyzer's exit code is last-writer-wins and
+does not stop the caller, so a clean pass after a failing one leaves the run reporting success.
+
 .OUTPUTS
 Microsoft.Windows.PowerShell.ScriptAnalyzer.Generic.DiagnosticRecord
 
@@ -32,6 +37,9 @@ Invoke-PSModuleAnalyzer -SourceDirectory $PWD/src -Fix
 
 .EXAMPLE
 Invoke-PSModuleAnalyzer -SourceDirectory $PWD/scripts/*.ps1 -NoRecurse
+
+.EXAMPLE
+Invoke-PSModuleAnalyzer -SourceDirectory $PWD/tests -ErrorOnFinding
 
 .NOTES
 N/A
@@ -44,7 +52,8 @@ function Invoke-PSModuleAnalyzer {
         [String]$Settings = (Get-PSModuleAnalyzerSettingsPath -CallerScriptRoot $PSScriptRoot),
         [Switch]$Fix,
         [Switch]$NoExit,
-        [Switch]$NoRecurse
+        [Switch]$NoRecurse,
+        [Switch]$ErrorOnFinding
     )
 
     $scriptAnalyzerArgs = @{
@@ -52,7 +61,7 @@ function Invoke-PSModuleAnalyzer {
         Settings      = $Settings
         Recurse       = (-not $NoRecurse)
         Severity      = 'Error', 'Warning', 'Information'
-        EnableExit    = (-not $Fix -and -not $NoExit)
+        EnableExit    = (-not $Fix -and -not $NoExit -and -not $ErrorOnFinding)
         ReportSummary = $true
         ErrorAction   = 'Stop'
     }
@@ -61,8 +70,21 @@ function Invoke-PSModuleAnalyzer {
         $scriptAnalyzerArgs.Fix = $true
     }
 
-    # After PSScriptAnalyzer fixes recursive PSUseCorrectCasing command metadata resolution, uncomment this call
-    # and remove the private workaround and its tests.
-    # Invoke-ScriptAnalyzer @scriptAnalyzerArgs
-    Invoke-PSModuleAnalyzerCasingWorkaround @scriptAnalyzerArgs
+    # After PSScriptAnalyzer fixes recursive PSUseCorrectCasing command metadata resolution, uncomment
+    # these calls and remove the private workaround and its tests.
+    if ($ErrorOnFinding) {
+        # $diagnostics = @(Invoke-ScriptAnalyzer @scriptAnalyzerArgs)
+        $diagnostics = @(Invoke-PSModuleAnalyzerCasingWorkaround @scriptAnalyzerArgs)
+
+        if ($diagnostics) {
+            # Written to the host as well as thrown: the throw discards the records, and a count on its
+            # own does not say what to fix.
+            Write-Host -Object ($diagnostics | Format-Table -AutoSize | Out-String -Width 200)
+            throw "$($diagnostics.Count) rule violation(s) found in '$SourceDirectory'."
+        }
+    }
+    else {
+        # Invoke-ScriptAnalyzer @scriptAnalyzerArgs
+        Invoke-PSModuleAnalyzerCasingWorkaround @scriptAnalyzerArgs
+    }
 }

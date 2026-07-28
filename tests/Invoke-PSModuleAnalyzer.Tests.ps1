@@ -112,6 +112,32 @@ Describe 'Unit Tests' -Tag 'Unit' {
         $topOnlyFindings.ScriptName | Should -Not -Contain 'Alias.ps1'
     }
 
+    It 'should not set the analyzer exit code when ErrorOnFinding is set' {
+        Mock Invoke-PSModuleAnalyzerCasingWorkaround {}
+
+        Invoke-PSModuleAnalyzer -SourceDirectory $TestDrive -ErrorOnFinding
+
+        Should -Invoke Invoke-PSModuleAnalyzerCasingWorkaround -Exactly -Times 1 -ParameterFilter {
+            $EnableExit -eq $false
+        }
+    }
+
+    It 'should throw naming the count and the path when ErrorOnFinding finds something' {
+        $fixtureDir = Join-Path -Path $TestDrive -ChildPath 'ErrorOnFindingFixture'
+        New-Item -ItemType Directory -Path $fixtureDir -Force | Out-Null
+        'function Get-Aliased { gci }' | Set-Content -Path "$fixtureDir/Aliased.ps1" -Encoding utf8
+
+        { Invoke-PSModuleAnalyzer -SourceDirectory $fixtureDir -ErrorOnFinding } |
+            Should -Throw '*rule violation(s) found in*ErrorOnFindingFixture*'
+    }
+
+    It 'should stay silent when ErrorOnFinding has nothing to report' {
+        $fixtureDir = Join-Path -Path $TestDrive -ChildPath 'ErrorOnFindingCleanFixture'
+        New-Item -ItemType Directory -Path $fixtureDir -Force | Out-Null
+
+        { Invoke-PSModuleAnalyzer -SourceDirectory $fixtureDir -ErrorOnFinding } | Should -Not -Throw
+    }
+
     It 'should preserve nested parentheses containing function definitions in fix mode' {
         $fixtureDir = Join-Path -Path $TestDrive -ChildPath 'IndentationFixture'
         New-Item -ItemType Directory -Path $fixtureDir -Force | Out-Null
