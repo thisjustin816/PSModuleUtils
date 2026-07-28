@@ -102,7 +102,7 @@ function Invoke-PSModuleAnalyzerCasingWorkaround {
         }
 
         $casingResultCount = 0
-        Get-ChildItem -Path $Path -Recurse -File -ErrorAction Stop |
+        Get-ChildItem -Path $Path -Recurse:$Recurse -File -ErrorAction Stop |
             Where-Object { $_.Extension -in '.ps1', '.psm1', '.psd1' } |
             ForEach-Object {
                 $casingArguments.Path = $_.FullName
