@@ -50,6 +50,35 @@ Describe 'Invoke-PSModuleAnalyzerCasingWorkaround' -Tag 'Unit' {
         $scriptAnalyzerArguments.Settings | Should -BeExactly $script:defaultSettingsPath
     }
 
+    It 'should accept settings as a hashtable and leave the caller''s copy untouched' {
+        $fixtureDir = Join-Path -Path $TestDrive -ChildPath 'HashtableSettingsFixture'
+        $null = New-Item -ItemType Directory -Path $fixtureDir -Force
+        "function Get-Only { 'only' }" | Set-Content -Path "$fixtureDir/Only.ps1"
+        $callerSettings = Import-PowerShellDataFile -Path $script:defaultSettingsPath
+        $scriptAnalyzerArguments = @{
+            Path          = $fixtureDir
+            Settings      = $callerSettings
+            Recurse       = $true
+            Severity      = 'Information'
+            EnableExit    = $false
+            ReportSummary = $true
+            ErrorAction   = 'Stop'
+        }
+        Mock Invoke-ScriptAnalyzer {}
+
+        Invoke-PSModuleAnalyzerCasingWorkaround @scriptAnalyzerArguments
+
+        Should -Invoke Invoke-ScriptAnalyzer -Exactly -Times 1 -ParameterFilter {
+            $Settings.IncludeRules -contains 'PSUseCorrectCasing' -and
+            $Path -like '*Only.ps1'
+        }
+        Should -Invoke Invoke-ScriptAnalyzer -Exactly -Times 1 -ParameterFilter {
+            $Settings.Rules.PSUseCorrectCasing.Enable -eq $false -and
+            $Recurse -eq $true
+        }
+        $callerSettings.Rules.PSUseCorrectCasing.Enable | Should -BeTrue
+    }
+
     It 'should enumerate only the top level for the casing pass when Recurse is false' {
         $fixtureDir = Join-Path -Path $TestDrive -ChildPath 'NonRecursiveCasingFixture'
         $nestedDir = Join-Path -Path $fixtureDir -ChildPath 'Nested'

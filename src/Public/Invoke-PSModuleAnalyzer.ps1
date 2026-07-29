@@ -15,8 +15,9 @@ The directory to analyze. Also accepts a file path or a wildcard such as scripts
 with -NoRecurse to analyze a directory's own scripts without descending into folders beneath it.
 
 .PARAMETER Settings
-The settings file to use. Defaults to the bundled PSScriptAnalyzerSettings.psd1, resolved for both a
-source checkout and a built module layout.
+A settings file path or a settings hashtable, as Invoke-ScriptAnalyzer itself accepts. Defaults to the
+bundled PSScriptAnalyzerSettings.psd1, resolved for both a source checkout and a built module layout.
+Pass a hashtable when the settings are assembled at run time, so nothing has to be written to disk.
 
 .PARAMETER Fix
 Whether to fix the issues found.
@@ -48,6 +49,11 @@ if ($findings) {
 .EXAMPLE
 Invoke-PSModuleAnalyzer -SourceDirectory $PWD/src -EnableExit
 
+.EXAMPLE
+$settings = Import-PowerShellDataFile -Path ./PSScriptAnalyzerSettings.psd1
+$settings.ExcludeRules += 'PSUseShouldProcessForStateChangingFunctions'
+Invoke-PSModuleAnalyzer -SourceDirectory $PWD/tests -Settings $settings
+
 .NOTES
 N/A
 #>
@@ -56,7 +62,7 @@ function Invoke-PSModuleAnalyzer {
     [OutputType('Microsoft.Windows.PowerShell.ScriptAnalyzer.Generic.DiagnosticRecord')]
     param (
         [String]$SourceDirectory = "$PWD/src",
-        [String]$Settings = (Get-PSModuleAnalyzerSettingsPath -CallerScriptRoot $PSScriptRoot),
+        [Object]$Settings = (Get-PSModuleAnalyzerSettingsPath -CallerScriptRoot $PSScriptRoot),
         [Switch]$Fix,
         [Switch]$NoRecurse,
         [Switch]$EnableExit
