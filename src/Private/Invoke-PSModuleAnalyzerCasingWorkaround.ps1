@@ -11,7 +11,8 @@ command-casing analysis.
 The file or directory to analyze.
 
 .PARAMETER Settings
-The PSScriptAnalyzer settings file to use.
+A settings file path or a settings hashtable, as Invoke-ScriptAnalyzer itself accepts. A hashtable is
+not modified; the split run gets a copy with command casing disabled.
 
 .PARAMETER Recurse
 Analyzes files recursively.
@@ -39,7 +40,7 @@ function Invoke-PSModuleAnalyzerCasingWorkaround {
         [String]$Path,
 
         [Parameter(Mandatory)]
-        [String]$Settings,
+        [Object]$Settings,
 
         [Switch]$Recurse,
 
@@ -57,7 +58,12 @@ function Invoke-PSModuleAnalyzerCasingWorkaround {
         $recursiveAnalyzerArguments[$argument.Key] = $argument.Value
     }
 
-    $settingsData = Import-PowerShellDataFile -Path $Settings -ErrorAction Stop
+    $settingsData = if ($Settings -is [Collections.IDictionary]) {
+        $Settings
+    }
+    else {
+        Import-PowerShellDataFile -Path $Settings -ErrorAction Stop
+    }
     $correctCasingRule = $settingsData.Rules.PSUseCorrectCasing
     $includeRules = @($settingsData.IncludeRules | Where-Object { $_ })
     $excludeRules = @($settingsData.ExcludeRules | Where-Object { $_ })
@@ -76,8 +82,14 @@ function Invoke-PSModuleAnalyzerCasingWorkaround {
     )
 
     if ($splitCommandCasing) {
-        $settingsData.Rules.PSUseCorrectCasing.Enable = $false
-        $recursiveAnalyzerArguments.Settings = $settingsData
+        # Copied rather than edited in place, because a caller that passed a hashtable still owns it.
+        $recursiveCasingRule = @{} + $correctCasingRule
+        $recursiveCasingRule.Enable = $false
+        $recursiveRules = @{} + $settingsData.Rules
+        $recursiveRules.PSUseCorrectCasing = $recursiveCasingRule
+        $recursiveSettings = @{} + $settingsData
+        $recursiveSettings.Rules = $recursiveRules
+        $recursiveAnalyzerArguments.Settings = $recursiveSettings
         $casingSettings = @{
             IncludeRules = @('PSUseCorrectCasing')
             Rules        = @{

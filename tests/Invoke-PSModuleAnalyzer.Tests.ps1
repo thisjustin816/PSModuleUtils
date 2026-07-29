@@ -112,6 +112,21 @@ Describe 'Unit Tests' -Tag 'Unit' {
         $topOnlyFindings.ScriptName | Should -Not -Contain 'Alias.ps1'
     }
 
+    It 'should analyze against a settings hashtable, with nothing written to disk' {
+        $fixtureDir = Join-Path -Path $TestDrive -ChildPath 'HashtableSettingsRun'
+        New-Item -ItemType Directory -Path $fixtureDir -Force | Out-Null
+        'function Get-Aliased { gci }' | Set-Content -Path "$fixtureDir/Aliased.ps1" -Encoding utf8
+        $settings = Import-PowerShellDataFile -Path (
+            Resolve-Path -Path $PSScriptRoot/../src/Settings/PSScriptAnalyzerSettings.psd1
+        ).Path
+        $settings.ExcludeRules = @($settings.ExcludeRules) + 'PSProvideCommentHelp'
+
+        $findings = Invoke-PSModuleAnalyzer -SourceDirectory $fixtureDir -Settings $settings
+
+        $findings.RuleName | Should -Contain 'PSAvoidUsingCmdletAliases'
+        $findings.RuleName | Should -Not -Contain 'PSProvideCommentHelp'
+    }
+
     It 'should hand a finding back to the caller rather than exiting on it' {
         $fixtureDir = Join-Path -Path $TestDrive -ChildPath 'DefaultReturnFixture'
         New-Item -ItemType Directory -Path $fixtureDir -Force | Out-Null
