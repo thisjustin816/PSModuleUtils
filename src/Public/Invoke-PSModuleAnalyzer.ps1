@@ -19,6 +19,14 @@ A settings file path or a settings hashtable, as Invoke-ScriptAnalyzer itself ac
 bundled PSScriptAnalyzerSettings.psd1, resolved for both a source checkout and a built module layout.
 Pass a hashtable when the settings are assembled at run time, so nothing has to be written to disk.
 
+.PARAMETER TargetVersion
+The PowerShell versions the analyzed code has to run on. PSScriptAnalyzer spreads this across five
+compatibility rules in three identifier formats; this sets all of them from one value. Omit it to
+use whatever the settings already specify, which for the bundled settings is 5.1 and 7.0 together.
+
+Pass 7.0 alone for code carrying #Requires -Version 7.0, so PowerShell 7 syntax such as the ternary
+operator stops being reported as incompatible.
+
 .PARAMETER Fix
 Whether to fix the issues found.
 
@@ -50,6 +58,9 @@ if ($findings) {
 Invoke-PSModuleAnalyzer -SourceDirectory $PWD/src -EnableExit
 
 .EXAMPLE
+Invoke-PSModuleAnalyzer -SourceDirectory $PWD/tools -TargetVersion 7.0
+
+.EXAMPLE
 $settings = Import-PowerShellDataFile -Path ./PSScriptAnalyzerSettings.psd1
 $settings.ExcludeRules += 'PSUseShouldProcessForStateChangingFunctions'
 Invoke-PSModuleAnalyzer -SourceDirectory $PWD/tests -Settings $settings
@@ -63,10 +74,16 @@ function Invoke-PSModuleAnalyzer {
     param (
         [String]$SourceDirectory = "$PWD/src",
         [Object]$Settings = (Get-PSModuleAnalyzerSettingsPath -CallerScriptRoot $PSScriptRoot),
+        [ValidateSet('5.1', '7.0')]
+        [String[]]$TargetVersion,
         [Switch]$Fix,
         [Switch]$NoRecurse,
         [Switch]$EnableExit
     )
+
+    if ($TargetVersion) {
+        $Settings = Get-PSModuleAnalyzerTargetSettings -Settings $Settings -TargetVersion $TargetVersion
+    }
 
     $scriptAnalyzerArgs = @{
         Path          = $SourceDirectory
