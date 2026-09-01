@@ -111,6 +111,42 @@ Describe 'Invoke-PSModuleAnalyzerCasingWorkaround' -Tag 'Unit' {
         }
     }
 
+    It 'should warn and continue when casing analysis fails for one file' {
+        $fixtureDir = Join-Path -Path $TestDrive -ChildPath 'CasingCrashFixture'
+        $null = New-Item -ItemType Directory -Path $fixtureDir -Force
+        "function Get-Crashing { 'crashing' }" | Set-Content -Path "$fixtureDir/Crashing.ps1"
+        "function Get-Healthy { 'healthy' }" | Set-Content -Path "$fixtureDir/Healthy.ps1"
+        $scriptAnalyzerArguments = @{
+            Path          = $fixtureDir
+            Settings      = $script:defaultSettingsPath
+            Recurse       = $true
+            Severity      = 'Information'
+            EnableExit    = $false
+            ReportSummary = $true
+            ErrorAction   = 'Stop'
+        }
+        Mock Invoke-ScriptAnalyzer {}
+        Mock Invoke-ScriptAnalyzer {
+            throw 'Unable to cast object of type FunctionMemberAst to type FunctionDefinitionAst.'
+        } -ParameterFilter {
+            $Settings.IncludeRules -contains 'PSUseCorrectCasing' -and $Path -like '*Crashing.ps1'
+        }
+
+        $warnings = $null
+        Invoke-PSModuleAnalyzerCasingWorkaround @scriptAnalyzerArguments -WarningVariable warnings 3>$null
+
+        $warnings | Should -HaveCount 1
+        $warnings[0].Message | Should -BeLike '*Crashing.ps1*'
+        $warnings[0].Message | Should -BeLike '*FunctionMemberAst*'
+        Should -Invoke Invoke-ScriptAnalyzer -Exactly -Times 1 -ParameterFilter {
+            $Settings.IncludeRules -contains 'PSUseCorrectCasing' -and $Path -like '*Healthy.ps1'
+        }
+        Should -Invoke Invoke-ScriptAnalyzer -Exactly -Times 1 -ParameterFilter {
+            $Settings.Rules.PSUseCorrectCasing.Enable -eq $false -and
+            $Recurse -eq $true
+        }
+    }
+
     It 'should invoke PSScriptAnalyzer unchanged when command casing does not need the workaround' {
         $settingsPath = Join-Path -Path $TestDrive -ChildPath 'DisabledCasingSettings.psd1'
         @'

@@ -99,8 +99,9 @@ function Invoke-PSModuleAnalyzer {
         $scriptAnalyzerArgs.Fix = $true
     }
 
-    # After PSScriptAnalyzer fixes recursive PSUseCorrectCasing command metadata resolution, uncomment this call
-    # and remove the private workaround and its tests.
+    # After PSScriptAnalyzer fixes PSUseCorrectCasing command metadata resolution - it fails on some
+    # constructs even in a single-file analysis - uncomment this call and remove the private workaround
+    # and its tests.
     # Invoke-ScriptAnalyzer @scriptAnalyzerArgs
     Invoke-PSModuleAnalyzerCasingWorkaround @scriptAnalyzerArgs
 }
