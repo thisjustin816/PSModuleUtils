@@ -4,8 +4,10 @@ Internal: invokes PSScriptAnalyzer with a temporary command-casing workaround.
 
 .DESCRIPTION
 Runs PSUseCorrectCasing sequentially per file when command casing is enabled, then runs the remaining analysis
-recursively. PSScriptAnalyzer 1.25.0 can fail while resolving command metadata during a recursive multi-file
-command-casing analysis.
+recursively. PSScriptAnalyzer 1.25.0 can fail while resolving command metadata during command-casing analysis;
+splitting the run keeps one file's failure from silencing every other rule. A file whose casing analysis still
+fails on its own is reported as a warning and skipped for that rule alone - the recursive pass analyzes it with
+everything else.
 
 .PARAMETER Path
 The file or directory to analyze.
@@ -118,10 +120,25 @@ function Invoke-PSModuleAnalyzerCasingWorkaround {
             Where-Object { $_.Extension -in '.ps1', '.psm1', '.psd1' } |
             ForEach-Object {
                 $casingArguments.Path = $_.FullName
-                Invoke-ScriptAnalyzer @casingArguments |
-                    ForEach-Object {
-                        $casingResultCount++
-                        $_
+                # The metadata-resolution failure this function exists for can
+                # also strike a single-file analysis, so one broken file must
+                # not end the run: the recursive pass below still analyzes it
+                # with every rule except casing, and the warning keeps the
+                # skip from being silent.
+                try {
+                    Invoke-ScriptAnalyzer @casingArguments |
+                        ForEach-Object {
+                            $casingResultCount++
+                            $_
+                        }
+                    }
+                    catch {
+                        $casingFailure = $_
+                        Write-Warning (
+                            "PSUseCorrectCasing analysis failed for '$($casingArguments.Path)' and was " +
+                            'skipped for that file; the remaining rules still analyze it. ' +
+                            "Underlying error: $($casingFailure.Exception.Message)"
+                        )
                     }
                 }
 
