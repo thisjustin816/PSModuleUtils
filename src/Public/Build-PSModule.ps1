@@ -32,6 +32,7 @@ The directory containing the source manifest and the canonical Public/Private fu
 
 .PARAMETER OutputDirectory
 The directory to build into. The module is written to "<OutputDirectory>/<Name>/<Version>".
+Relative paths resolve from the caller's current location.
 
 .PARAMETER SourceDirectories
 The source subfolders, in load order, that ModuleBuilder concatenates into the built module.
@@ -109,6 +110,7 @@ function Build-PSModule {
         }
     }
 
+    $OutputDirectory = (New-Item -ItemType Directory -Path $OutputDirectory -Force).FullName
     $moduleOutputRoot = Join-Path -Path $OutputDirectory -ChildPath $Name
     Remove-Item -Path $moduleOutputRoot -Recurse -Force -ErrorAction SilentlyContinue
 

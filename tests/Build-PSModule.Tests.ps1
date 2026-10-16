@@ -9,6 +9,47 @@ Describe 'Integration Tests' -Tag 'Integration' {
         . "$PSScriptRoot/../src/Public/Build-PSModule.ps1"
     }
 
+    It 'should build and rebuild into the caller-relative output directory' {
+        $fixtureRoot = Join-Path $TestDrive 'Relative Output Module'
+        $sourceDirectory = Join-Path $fixtureRoot 'src'
+        $publicDirectory = Join-Path $sourceDirectory 'Public'
+        $null = New-Item -ItemType Directory -Path $publicDirectory -Force
+        Set-Content -LiteralPath (Join-Path $publicDirectory 'Get-RelativeExample.ps1') `
+            -Value 'function Get-RelativeExample { $true }'
+        New-ModuleManifest -Path (Join-Path $sourceDirectory 'RelativeOutputModule.psd1') `
+            -RootModule 'RelativeOutputModule.psm1' `
+            -ModuleVersion '1.0.0' `
+            -FunctionsToExport @()
+        $expectedDirectory = Join-Path $fixtureRoot 'build output/RelativeOutputModule/1.0.0'
+        $expectedManifest = Join-Path $expectedDirectory 'RelativeOutputModule.psd1'
+
+        Push-Location -LiteralPath $fixtureRoot
+        try {
+            $firstBuild = Build-PSModule -SourceDirectory $sourceDirectory `
+                -OutputDirectory './build output' `
+                -SkipGitMetadata
+
+            $firstBuild.FullName | Should -Be $expectedManifest
+            $expectedManifest | Should -Exist
+            (Join-Path $sourceDirectory 'build output') | Should -Not -Exist
+
+            $staleFile = Join-Path $expectedDirectory 'stale.txt'
+            Set-Content -LiteralPath $staleFile -Value 'Stale build output'
+            $secondBuild = Build-PSModule -SourceDirectory $sourceDirectory `
+                -OutputDirectory './build output' `
+                -SkipGitMetadata
+
+            $secondBuild.FullName | Should -Be $expectedManifest
+            $expectedManifest | Should -Exist
+            $staleFile | Should -Not -Exist
+            (Join-Path $sourceDirectory 'build output') | Should -Not -Exist
+        }
+        finally {
+            Remove-Module -Name 'RelativeOutputModule' -Force -ErrorAction SilentlyContinue
+            Pop-Location
+        }
+    }
+
     It 'should build a versioned module' {
         Build-PSModule `
             -Version '1.0.0-pester' `
