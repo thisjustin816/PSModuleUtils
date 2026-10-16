@@ -9,6 +9,25 @@ Describe 'Integration Tests' -Tag 'Integration' {
         . "$PSScriptRoot/../src/Public/Build-PSModule.ps1"
     }
 
+    It 'should exclude a not-yet-created output directory from source assets' {
+        $sourceDirectory = Join-Path $TestDrive 'OutputAssetModule'
+        $null = New-Item -ItemType Directory -Path $sourceDirectory -Force
+        New-ModuleManifest -Path (Join-Path $sourceDirectory 'OutputAssetModule.psd1') `
+            -RootModule 'OutputAssetModule.psm1' `
+            -ModuleVersion '1.0.0'
+        $outputDirectory = Join-Path $sourceDirectory 'out'
+        Mock Build-Module { throw 'Stopped at the build boundary.' }
+
+        {
+            Build-PSModule -SourceDirectory $sourceDirectory `
+                -OutputDirectory $outputDirectory `
+                -SkipGitMetadata
+        } | Should -Throw '*Stopped at the build boundary*'
+
+        Should -Invoke Build-Module -Exactly 1 -ParameterFilter { $CopyPaths -notcontains 'out' }
+        $outputDirectory | Should -Not -Exist
+    }
+
     It 'should build and rebuild into the caller-relative output directory' {
         $fixtureRoot = Join-Path $TestDrive 'Relative Output Module'
         $sourceDirectory = Join-Path $fixtureRoot 'src'
