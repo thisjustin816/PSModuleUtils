@@ -1,6 +1,6 @@
 @{
     RootModule           = 'PSModuleUtils.psm1'
-    ModuleVersion        = '4.2.2'
+    ModuleVersion        = '4.2.3'
     GUID                 = '3c63c38f-c32c-4837-a6fa-0b456f4099ce'
     Author               = ''
     CompanyName          = ''
@@ -17,7 +17,7 @@
         @{ ModuleName = 'Metadata'; ModuleVersion = '1.5.0'; MaximumVersion = '1.999.999' }
         @{ ModuleName = 'JBUtils'; ModuleVersion = '1.1.0'; MaximumVersion = '1.999.999' }
         @{ ModuleName = 'Pester'; ModuleVersion = '5.0'; MaximumVersion = '5.999.999' }
-        @{ ModuleName = 'PSScriptAnalyzer'; ModuleVersion = '1.20.0'; MaximumVersion = '1.999.999' }
+        @{ ModuleName = 'PSScriptAnalyzer'; ModuleVersion = '1.25.0'; MaximumVersion = '1.999.999' }
         @{ ModuleName = 'Microsoft.PowerShell.PSResourceGet'; ModuleVersion = '1.0.0' }
     )
     PrivateData          = @{
