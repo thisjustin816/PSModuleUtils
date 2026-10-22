@@ -58,3 +58,17 @@ The folder structure should be maintained like the example below:
     ├───ModuleName.Module.Tests.ps1
     └───Verb-Noun.Tests.ps1
 ```
+
+## Building and testing this repository
+
+PSModuleUtils 5 requires PowerShell 7.4 or newer and Pester 6.2 or newer within the 6.x series.
+Run `./build.ps1` in a fresh PowerShell process after installing the dependencies declared in
+`src/PSModuleUtils.psd1`. The build loads those dependencies directly and compiles the current
+source; it does not require an installed copy of PSModuleUtils.
+
+Pester 5 and 6 cannot share a process because their assemblies use the same names. Start a new
+process when moving between build-tool majors. Tests run sequentially. `Test-PSModule` writes
+NUnit XML to `out/tests/testResults.xml` and JaCoCo coverage to `out/tests/coverage.xml`. Failed
+tests throw a terminating error so local callers and CI both observe the failure. Discovered suites
+with zero passing tests also fail, including fully filtered or skipped suites. A directory without
+test files retains the existing warning-and-return behavior.

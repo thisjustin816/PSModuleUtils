@@ -11,7 +11,7 @@ Describe 'Unit Tests' -Tag 'Unit' {
         It 'should warn and not invoke Pester' {
             $emptyDir = Join-Path -Path $TestDrive -ChildPath 'no-tests'
             New-Item -ItemType Directory -Path $emptyDir -Force | Out-Null
-            Mock Invoke-Pester {}
+            Mock Invoke-Pester { [PSCustomObject]@{ PassedCount = 1 } }
             Test-PSModule `
                 -Name 'TestModule' `
                 -TestPath $emptyDir `
@@ -28,7 +28,7 @@ Describe 'Unit Tests' -Tag 'Unit' {
             New-Item -ItemType Directory -Path $script:testDir -Force | Out-Null
             $sample = 'Describe "x" { It "y" { $true | Should -BeTrue } }'
             Set-Content -Path (Join-Path -Path $script:testDir -ChildPath 'Sample.Tests.ps1') -Value $sample
-            Mock Invoke-Pester {}
+            Mock Invoke-Pester { [PSCustomObject]@{ PassedCount = 1 } }
         }
 
         It 'should invoke Pester with the test path in the configuration' {
@@ -51,6 +51,12 @@ Describe 'Unit Tests' -Tag 'Unit' {
             }
         }
 
+        It 'should pass excluded tags to Pester' {
+            Test-PSModule -Name 'TestModule' -TestPath $script:testDir -ExcludeTag 'HostIntegration'
+            Should -Invoke Invoke-Pester -Times 1 -Exactly -ParameterFilter {
+                $Configuration.Filter.ExcludeTag.Value -contains 'HostIntegration'
+            }
+        }
         It 'should write reports with the build artifacts by default' {
             Test-PSModule -Name 'TestModule' -TestPath $script:testDir
             Should -Invoke Invoke-Pester -Times 1 -Exactly -ParameterFilter {

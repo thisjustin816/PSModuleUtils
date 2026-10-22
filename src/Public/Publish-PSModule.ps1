@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Publishes a PowerShell module to a repository.
 
@@ -32,42 +32,51 @@ function Publish-PSModule {
         [String]$ApiKey = $env:PSGALLERYAPIKEY
     )
 
+    $versionedFolder = Get-ChildItem -LiteralPath "$OutputDirectory/$Name" -Directory |
+        Where-Object { Test-Path -LiteralPath "$($_.FullName)/$Name.psd1" -PathType Leaf } |
+        Sort-Object -Property { [Version]$_.Name } -Descending |
+        Select-Object -First 1
+    if (-not $versionedFolder) {
+        Write-Warning -Message "No module named $Name found to publish."
+        return
+    }
+    if (-not $PSCmdlet.ShouldProcess("$Name $($versionedFolder.Name) in $Repository", 'Publish module')) {
+        return
+    }
+
     Get-Module -Name $Name -All | Remove-Module -Force -Confirm:$false -ErrorAction SilentlyContinue
+    Import-Module -Name "$($versionedFolder.FullName)/$Name.psd1" -Force -Global -ErrorAction Stop
+    Publish-PSResource `
+        -Path $versionedFolder.FullName `
+        -ApiKey $ApiKey `
+        -Repository $Repository `
+        -ErrorAction Stop
 
-    $versionedFolder = Get-ChildItem -Path "$OutputDirectory/$Name" | Select-Object -Last 1
-    if ($versionedFolder) {
-        Import-Module -Name "$($versionedFolder.FullName)/$Name.psd1" -Force -Global
-        Publish-PSResource `
-            -Path $versionedFolder.FullName `
-            -ApiKey $ApiKey `
-            -Repository $Repository
-
-        $maxRetries = 5
-        $attempt = 0
-        $delayIntervals = 1, 2, 3, 5, 8
-        do {
-            try {
-                $publishedModule = Find-PSResource `
-                    -Name $Name `
-                    -Version $versionedFolder.BaseName `
-                    -Prerelease `
-                    -Repository $Repository
-                break
-            }
-            catch {
-                Write-Warning -Message (
-                    "Couldn't find published module. Retrying after $($delayIntervals[$attempt]) seconds."
-                )
-                Start-Sleep -Seconds $delayIntervals[$attempt]
-                $attempt++
-                if ($attempt -ge $maxRetries) {
-                    throw $_
-                }
+    $delayIntervals = 1, 2, 3, 5
+    for ($attempt = 0; $attempt -le $delayIntervals.Count; $attempt++) {
+        $publishedModule = $null
+        try {
+            $publishedModule = Find-PSResource `
+                -Name $Name `
+                -Version $versionedFolder.BaseName `
+                -Prerelease `
+                -Repository $Repository `
+                -ErrorAction Stop
+        }
+        catch {
+            if ($attempt -eq $delayIntervals.Count) {
+                throw
             }
         }
-        while (-not $publishedModule -and $attempt -lt $maxRetries)
-    }
-    else {
-        Write-Warning -Message "No module named $Name found to publish."
+        if ($publishedModule) {
+            break
+        }
+        if ($attempt -eq $delayIntervals.Count) {
+            throw (
+                "Published module '$Name $($versionedFolder.Name)' was not found in '$Repository' after five attempts."
+            )
+        }
+        Write-Warning -Message "Couldn't find published module. Retrying after $($delayIntervals[$attempt]) seconds."
+        Start-Sleep -Seconds $delayIntervals[$attempt]
     }
 }
