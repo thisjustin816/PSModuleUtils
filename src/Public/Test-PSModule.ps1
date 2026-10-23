@@ -3,8 +3,9 @@
 Tests a PowerShell module using Pester.
 
 .DESCRIPTION
-Tests a PowerShell module using Pester. The function installs Pester, removes any existing module with the same name,
-and runs Pester with a configuration optimized for running in a CI pipeline.
+Tests a PowerShell module using the required Pester version. Removes any existing module with the same name,
+and writes test and coverage reports for CI. Discovered suites must pass at least one test.
+A directory without test files retains the warning-and-return behavior.
 
 .PARAMETER Name
 The name of the module.
@@ -21,10 +22,13 @@ current directory, keeping generated reports with the other build artifacts inst
 test sources.
 
 .PARAMETER Exclude
-The directories to exclude from testing and code coverage.
+The files or directories to exclude from test discovery. Does not change the code coverage target.
 
 .PARAMETER Tag
 The tag to filter tests by.
+
+.PARAMETER ExcludeTag
+Tags to exclude from execution, such as tests requiring a disposable host or live service.
 
 .EXAMPLE
 Test-PSModule -Name 'MyModule' -SourceDirectory "$PWD/src" -TestPath "$PWD/tests" -Tag 'Unit'
@@ -40,7 +44,8 @@ function Test-PSModule {
         [String]$TestPath = "$PWD/tests",
         [String]$ResultsDirectory = "$PWD/out/tests",
         [String[]]$Exclude,
-        [String[]]$Tag
+        [String[]]$Tag,
+        [String[]]$ExcludeTag
     )
 
     $testFiles = Get-ChildItem -Path $TestPath -Filter '*.Tests.ps1' -Recurse -ErrorAction SilentlyContinue
@@ -51,17 +56,21 @@ function Test-PSModule {
     Get-Module -Name $Name -All | Remove-Module -Force -ErrorAction SilentlyContinue
     $config = New-PesterConfiguration @{
         Run          = @{
+            PassThru    = $true
             Path        = $TestPath
             ExcludePath = $Exclude
         }
         CodeCoverage = @{
-            Enabled    = $true
-            Path       = $SourceDirectory
-            OutputPath = Join-Path $ResultsDirectory 'coverage.xml'
+            Enabled      = $true
+            OutputFormat = 'JaCoCo'
+            ReportRoot   = $SourceDirectory
+            Path         = $SourceDirectory
+            OutputPath   = Join-Path $ResultsDirectory 'coverage.xml'
         }
         TestResult   = @{
-            Enabled    = $true
-            OutputPath = Join-Path $ResultsDirectory 'testResults.xml'
+            Enabled      = $true
+            OutputFormat = 'NUnitXml'
+            OutputPath   = Join-Path $ResultsDirectory 'testResults.xml'
         }
         Output       = @{
             Verbosity = 'Detailed'
@@ -71,9 +80,16 @@ function Test-PSModule {
         $config.Filter.Tag = $Tag
     }
 
+    if ($ExcludeTag) {
+        $config.Filter.ExcludeTag = $ExcludeTag
+    }
+
     $config.Run.Throw = $true
 
     Write-Verbose -Message 'Running Pester tests with the following configuration:'
     Write-Verbose -Message ( $config | ConvertTo-Json -Depth 5 )
-    Invoke-Pester -Configuration $config
+    $result = Invoke-Pester -Configuration $config
+    if ($result.PassedCount -eq 0) {
+        throw 'Pester did not execute any passing tests. Check the selected paths, tags, and skips.'
+    }
 }

@@ -15,7 +15,7 @@ Describe 'Unit Tests' -Tag 'Unit' {
             Publish-PSModule `
                 -Name 'TestModule' `
                 -OutputDirectory $emptyOutput `
-                -ApiKey 'fake' `
+                -ApiKey 'fake' -Confirm:$false `
                 -WarningVariable warnings `
                 -WarningAction SilentlyContinue
             ( $warnings -join ' ' ) | Should -Match 'No module named TestModule found to publish'
@@ -42,12 +42,47 @@ Describe 'Unit Tests' -Tag 'Unit' {
         }
 
         It 'should call Publish-PSResource with the versioned folder path' {
-            Publish-PSModule -Name 'TestModule' -OutputDirectory $script:moduleOutput -ApiKey 'fake'
+            Publish-PSModule -Name 'TestModule' -OutputDirectory $script:moduleOutput -ApiKey 'fake' -Confirm:$false
             Should -Invoke Publish-PSResource -Times 1 -Exactly -ParameterFilter {
                 $Path -eq $script:versionedFolder -and $Repository -eq 'PSGallery'
             }
         }
 
+        It 'should not publish or query the repository under WhatIf' {
+            Publish-PSModule -Name 'TestModule' -OutputDirectory $script:moduleOutput -ApiKey 'fake' -WhatIf
+            Should -Invoke Publish-PSResource -Times 0
+            Should -Invoke Find-PSResource -Times 0
+        }
+
+        It 'should stop when publishing fails' {
+            Mock Publish-PSResource { Write-Error 'Publication rejected' }
+            {
+                Publish-PSModule -Name 'TestModule' -OutputDirectory $script:moduleOutput -ApiKey 'fake' -Confirm:$false
+            } | Should -Throw '*Publication rejected*'
+            Should -Invoke Find-PSResource -Times 0
+        }
+
+        It 'should fail after five empty lookup responses' {
+            Mock Find-PSResource { $null }
+            Mock Start-Sleep {}
+            {
+                Publish-PSModule -Name 'TestModule' -OutputDirectory $script:moduleOutput -ApiKey 'fake' -Confirm:$false
+            } | Should -Throw '*not found*'
+            Should -Invoke Find-PSResource -Times 5 -Exactly
+            Should -Invoke Start-Sleep -Times 4 -Exactly
+        }
+
+        It 'should choose the highest numeric version' {
+            foreach ($version in @('2.0.0', '10.0.0')) {
+                $folder = Join-Path $script:moduleOutput "TestModule/$version"
+                $null = New-Item -ItemType Directory -Path $folder -Force
+                New-ModuleManifest -Path "$folder/TestModule.psd1" -ModuleVersion $version
+            }
+            Publish-PSModule -Name 'TestModule' -OutputDirectory $script:moduleOutput -ApiKey 'fake' -Confirm:$false
+            Should -Invoke Publish-PSResource -Times 1 -Exactly -ParameterFilter {
+                $Path -eq (Join-Path $script:moduleOutput 'TestModule/10.0.0')
+            }
+        }
         It 'should throw after exhausting Find-PSResource retries' {
             Mock Find-PSResource { throw 'not found yet' }
             Mock Start-Sleep {}
@@ -55,7 +90,7 @@ Describe 'Unit Tests' -Tag 'Unit' {
                 Publish-PSModule `
                     -Name 'TestModule' `
                     -OutputDirectory $script:moduleOutput `
-                    -ApiKey 'fake' `
+                    -ApiKey 'fake' -Confirm:$false `
                     -WarningAction SilentlyContinue
             } | Should -Throw
             Should -Invoke Find-PSResource -Times 5 -Exactly
