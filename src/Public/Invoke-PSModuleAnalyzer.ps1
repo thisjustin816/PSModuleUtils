@@ -39,6 +39,9 @@ Passed through to Invoke-ScriptAnalyzer: asks the host to exit with the diagnost
 finishes. Suits a CI step that is one analyzer call. It does not stop the caller and the code is
 last-writer-wins, so a script analyzing several paths should test the returned diagnostics instead.
 
+.PARAMETER NoSummary
+Suppresses the analyzer's console summary while returning all diagnostics. The default keeps the summary.
+
 .OUTPUTS
 Microsoft.Windows.PowerShell.ScriptAnalyzer.Generic.DiagnosticRecord
 
@@ -78,7 +81,8 @@ function Invoke-PSModuleAnalyzer {
         [String[]]$TargetVersion,
         [Switch]$Fix,
         [Switch]$NoRecurse,
-        [Switch]$EnableExit
+        [Switch]$EnableExit,
+        [Switch]$NoSummary
     )
 
     if ($TargetVersion) {
@@ -91,7 +95,7 @@ function Invoke-PSModuleAnalyzer {
         Recurse       = (-not $NoRecurse)
         Severity      = 'Error', 'Warning', 'Information'
         EnableExit    = $EnableExit
-        ReportSummary = $true
+        ReportSummary = (-not $NoSummary)
         ErrorAction   = 'Stop'
     }
 
