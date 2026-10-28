@@ -83,6 +83,35 @@ Describe 'Unit Tests' -Tag 'Unit' {
         }
     }
 
+    It 'should suppress the analyzer summary only when NoSummary is requested' {
+        Mock Invoke-PSModuleAnalyzerCasingWorkaround { [PSCustomObject]@{ RuleName = 'FixtureRule' } }
+
+        $result = Invoke-PSModuleAnalyzer -SourceDirectory $TestDrive -NoSummary
+
+        $result.RuleName | Should -Be 'FixtureRule'
+        Should -Invoke Invoke-PSModuleAnalyzerCasingWorkaround -Exactly -Times 1 -ParameterFilter {
+            $ReportSummary -eq $false -and $ErrorAction -eq 'Stop'
+        }
+    }
+
+    It 'should return real diagnostics without writing a console summary when NoSummary is requested' {
+        $path = Join-Path $TestDrive 'QuietDiagnostics.ps1'
+        Set-Content -LiteralPath $path -Value 'function Get-Aliased { gci }'
+        $previousWriter = [Console]::Out
+        $capturedWriter = [IO.StringWriter]::new()
+        try {
+            [Console]::SetOut($capturedWriter)
+            $findings = Invoke-PSModuleAnalyzer -SourceDirectory $path -NoSummary
+        }
+        finally {
+            [Console]::SetOut($previousWriter)
+        }
+
+        $findings.RuleName | Should -Contain 'PSAvoidUsingCmdletAliases'
+        $capturedWriter.ToString() | Should -BeNullOrEmpty
+        $capturedWriter.Dispose()
+    }
+
     It 'should analyze recursively by default and honor NoRecurse' {
         Mock Invoke-PSModuleAnalyzerCasingWorkaround {}
 

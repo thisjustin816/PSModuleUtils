@@ -8,6 +8,16 @@ A module with helper functions to build and publish PowerShell modules to the PS
 Install-Module PSModuleUtils
 ```
 
+## Analyzer output
+
+`Invoke-PSModuleAnalyzer` returns diagnostic records and prints a summary by default. Pass
+`-NoSummary` when a controller needs to keep stdout reserved for structured output. Diagnostics,
+fix behavior and the optional exit-code gate are preserved.
+
+```powershell
+$findings = Invoke-PSModuleAnalyzer -SourceDirectory ./src -NoSummary
+```
+
 ## PowerShell Module Development
 
 Follow [The PowerShell Best Practices and Style Guide](https://poshcode.gitbooks.io/powershell-practice-and-style/) as much as possible, with the following rules being the most important:
